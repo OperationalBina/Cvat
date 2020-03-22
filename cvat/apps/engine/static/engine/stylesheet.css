@@ -1,0 +1,981 @@
+/*
+ * Copyright (C) 2018 Intel Corporation
+ *
+ * SPDX-License-Identifier: MIT
+ */
+
+ body {
+    overflow-y: hidden;
+ }
+
+/* ----------------------- Classes ----------------------- */
+.playerButton {
+    fill: #09c;
+    stroke-width: 2px;
+    stroke: black;
+    margin-top: 1%;
+    margin-right: 15px;
+    float:left;
+    width: 40px;
+    height: 40px;
+}
+
+.playerButton:hover {
+    fill: rgba(0,0,0,0);
+}
+
+.playerButton:active {
+    fill: #017196;
+}
+
+.disabledPlayerButton {
+    fill:grey !important;
+    stroke: grey !important;
+}
+
+.commentButtons {
+    float: unset;
+    height: 30px;
+    width: 30px;
+    cursor: pointer;
+}
+
+.commentTooltip {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+}
+
+.commentTooltip #commentTooltipTextArea {
+    display: none;
+    text-align: center;
+    padding: 5px 0;
+    border-radius: 6px;
+
+    width: 300px;
+    height: 60px;
+    bottom: 100%;
+    left: 50%;
+    top: 40px;
+    margin-left: -150px; /* half of width */
+}
+
+.nudge-right {
+    margin-left: 120px;
+}
+
+#commentTextArea {
+    /* display: none; */
+    height: 60px;
+    width: 300px;
+    border-radius: 8px;
+    z-index: 999;
+    border: 1px solid black;
+}
+
+.commentAreaOpen {
+    position: absolute !important;
+    display: inherit !important;
+}
+
+#frameNumber {
+    text-align: center;
+}
+
+.close {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    width: 32px;
+    height: 32px;
+    opacity: 0.3;
+  }
+
+  .close:hover {
+    opacity: 1;
+  }
+
+  .close:before, .close:after {
+    position: absolute;
+    left: 15px;
+    content: ' ';
+    height: 22px;
+    width: 2px;
+    background-color: #333;
+  }
+
+  .close:before {
+    transform: rotate(45deg);
+  }
+
+  .close:after {
+    transform: rotate(-45deg);
+  }
+
+.invertColor {
+    filter: invert(100%)
+}
+
+.graphicButton {
+    opacity: 0.6;
+    width: 20px;
+    height: 20px;
+    border: none;
+    outline: none;
+    margin-right: 10px;
+}
+
+.graphicButton:hover {
+    opacity: 1;
+}
+
+.graphicButton:active {
+    opacity: 0.2;
+}
+
+.centerDiv {
+    text-align: center;
+    width: 100%;
+}
+
+.progressDiv {
+    display: inline-block;
+    width: 106px;
+    height: 16px;
+    margin: auto 10px auto auto;
+    border: solid;
+    border-color: #ced5de;
+    background-color: #5f5f5f;
+    border-width: 2px;
+    border-radius: 0.3em;
+}
+
+.barDiv {
+    width: 0%;
+    height: 16px;
+    background-color: #ced5de;
+    text-align: center;
+    line-height: 16px;
+    color: #000000;
+    text-shadow: 0px 0px 3px #ced5de;
+}
+
+.playButton {
+    background: url("icons/play.png") no-repeat;
+    background-size: 20px;
+    margin: auto 10px auto auto;
+    transform: scale(0.8);
+}
+
+.stopButton {
+    background: url("icons/stop.png") no-repeat;
+    background-size: 20px;
+    margin: auto 10px auto auto;
+    transform: scale(0.8);
+}
+
+.lockButton {
+    background: url("icons/unlock.png") no-repeat;
+    background-size: 20px;
+}
+
+.locked {
+    background: url("icons/lock.png") no-repeat;
+    background-size: 20px;
+}
+
+.occludedButton {
+    background: url("icons/non-occluded.png") no-repeat;
+    background-size: 20px;
+}
+
+.occluded {
+    background: url("icons/occluded.png") no-repeat;
+    background-size: 20px;
+}
+
+.copyButton {
+    background: url("icons/copy.png") no-repeat;
+    background-size: 20px;
+}
+
+.propagateButton {
+    background: url("icons/propagate.png") no-repeat;
+    background-size: 20px;
+}
+
+.hiddenButton {
+    background: url("icons/non-hidden.png") no-repeat;
+    background-size: 20px;
+}
+
+.hiddenText {
+    background: url("icons/hidden-text.png") no-repeat;
+    background-size: 20px;
+}
+
+.hiddenShape {
+    background: url("icons/hidden-shape.png") no-repeat;
+    background-size: 20px;
+}
+
+.outsideButton {
+    background: url("icons/non-outside.png") no-repeat;
+    background-size: 20px;
+}
+
+.outside {
+    background: url("icons/outside.png") no-repeat;
+    background-size: 20px;
+}
+
+.keyFrameButton {
+    background: url("icons/non-keyframe.png") no-repeat;
+    background-size: 20px;
+}
+
+.keyFrame {
+    background: url("icons/keyframe.png") no-repeat;
+    background-size: 20px;
+}
+
+.prevKeyFrameButton {
+    background: url("icons/prevKeyFrame.png") no-repeat;
+    background-size: 20px;
+}
+
+.initKeyFrameButton {
+    background: url("icons/initKeyFrame.png") no-repeat;
+    background-size: 20px;
+}
+
+.nextKeyFrameButton {
+    background: url("icons/nextKeyFrame.png") no-repeat;
+    background-size: 20px;
+}
+
+.downArrowButton {
+    background: url("icons/nextKeyFrame.png") no-repeat;
+    background-size: 20px;
+    transform: rotate(90deg)
+}
+
+.downArrowButton:hover {
+    cursor: pointer;
+}
+
+.upArrowButton {
+    background: url("icons/nextKeyFrame.png") no-repeat;
+    background-size: 20px;
+    transform: rotate(-90deg)
+}
+
+.upArrowButton:hover {
+    cursor: pointer;
+}
+
+.clearSelectionText {
+    margin-top: 8px;
+    margin-left: 6px;
+    display: block;
+    font-size: 0.5em;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+#sidenavContainer {
+    height: 100%;
+    width: 98%;
+    position: absolute;
+    pointer-events: none;
+}
+
+.sidenav {
+    height: 0;
+    width: 15.3%;
+    float: right;
+    z-index: 1;
+    background-color: #003c64;
+    overflow: hidden;
+    padding-top: 0px;
+    transition: 0.5s;
+    border-radius: 5px;
+    margin-top: 71px;
+    text-align: center;
+    pointer-events: initial;
+    position: relative;
+}
+
+.sidenav a {
+    padding: 8px 80px 8px 0px;
+    text-decoration: none;
+    font-size: 25px;
+    color: #fff;
+    display: block;
+    transition: 0.3s;
+    display: inline-block;
+    width: 100%;
+}
+
+.sidenav a:hover {
+    background-color: #b0c4de;
+    cursor: pointer;
+}
+
+.closebtn:hover {
+    background-color: #003c64 !important;
+}
+
+.sidenav .closebtn {
+    padding: 8px 8px 8px 32px;
+    position: absolute;
+    top: 0;
+    right: 25px;
+    font-size: 36px;
+    margin-left: 50px;
+}
+
+#sidenavOpener {
+    transform: rotate(-90deg);
+    margin-right: 10px;
+}
+
+.uiElement, .framePropContentElement {
+    width: 93%;
+    border-radius: 2px;
+    margin: 1% auto;
+    padding: 1%;
+    text-align: left;
+    position: relative;
+    border: 3px solid rgba(0,0,0,0);
+    opacity: 0.65;
+}
+
+.framePropValueText {
+    display: inline;
+    cursor: pointer;
+}
+
+.highlightedUI {
+    border: 3px solid black;
+    opacity: 1;
+}
+
+.uiAttr {
+    margin-left: 5%;
+    margin-bottom: 2px;
+}
+
+.selectAttr {
+    width: 60%;
+}
+
+.numberAttr {
+    width: 20%;
+}
+
+.textAttr {
+    width: 60%;
+}
+
+.shape {
+    position: relative;
+    shape-rendering: geometricprecision;
+    color-rendering: optimizeQuality;
+}
+
+.selectedShape {
+    cursor: move;
+}
+
+.polyline {
+    fill: none !important;
+}
+
+.points {
+    stroke: none !important;
+    fill: none !important;
+}
+
+.shapeSelect {
+    fill-opacity: 0;
+    stroke-opacity: 1;
+    visibility: hidden;
+}
+
+.shapeCreation {
+    stroke: #fff;
+    fill-opacity: 0;
+}
+
+.svg_select_points {
+    fill-opacity: 1;
+    cursor: pointer;
+}
+
+.svg_select_points_lt{
+    cursor: nw-resize;
+}
+.svg_select_points_rt{
+    cursor: ne-resize;
+}
+.svg_select_points_rb{
+    cursor: se-resize;
+}
+.svg_select_points_lb{
+    cursor: sw-resize;
+}
+.svg_select_points_t{
+    cursor: n-resize;
+}
+.svg_select_points_r{
+    cursor: e-resize;
+}
+.svg_select_points_b{
+    cursor: s-resize;
+}
+.svg_select_points_l{
+    cursor: w-resize;
+}
+
+.shapeText {
+    font-size: 1.2em;
+    fill: white;
+    text-shadow: 0px 0px 3px black;
+    cursor: default;
+    pointer-events: none;
+}
+
+.highlightedShape {
+    fill-opacity: 0.2;
+    stroke-opacity: 1;
+}
+
+.occludedShape {
+    stroke-dasharray: 5;
+}
+
+.mergeShape {
+    fill: blue;
+    fill-opacity: 0.5;
+}
+
+.mergePoints {
+    fill: blue;
+    fill-opacity: 0.5;
+}
+
+.mergeLine {
+    stroke: blue;
+    stroke-opacity: 1;
+}
+
+.groupShape {
+    fill: darkmagenta;
+    fill-opacity: 0.5;
+}
+
+.groupPoints {
+    fill: darkmagenta;
+    fill-opacity: 0.5;
+}
+
+.groupLine {
+    stroke: darkmagenta;
+    stroke-opacity: 1;
+}
+
+.lockedShape {
+    mix-blend-mode: screen;
+}
+
+.lockedText {
+    fill-opacity: 0.5;
+}
+
+
+.menuButton {
+    width: 90%;
+    height: 40px;
+    margin-top: 2px;
+}
+
+
+.settingsBox {
+    width: 15px;
+    height: 15px;
+    margin-left: 0px;
+}
+
+.custom-menu {
+    display: none;
+    z-index: 1000;
+    position: absolute;
+    overflow: hidden;
+    border: 1px solid #CCC;
+    white-space: nowrap;
+    font-family: sans-serif;
+    background: #FFF;
+    color: #333;
+    border-radius: 5px;
+    padding: 0;
+}
+
+.buttonBlockOfLabelUI {
+    margin: 5px;
+    padding: 5px;
+    border: 1px solid black;
+    border-radius: 2px;
+}
+
+.buttonBlockOfFramePropUI {
+    margin: 5px;
+    padding: 5px;
+    border: 1px solid black;
+    border-radius: 2px;
+}
+
+/* Each of the items in the list */
+.custom-menu li {
+    padding: 8px 12px;
+    cursor: pointer;
+    list-style-type: none;
+    transition: all .3s ease;
+    user-select: none;
+}
+
+.custom-menu li:hover {
+    background-color: #DEF;
+}
+
+.customizedTab {
+    border-radius: 5px 5px 0px 0px;
+    width: 100%;
+    width: 15%;
+    float: left;
+    margin: 0px 10px;
+    text-align: center;
+}
+
+/* ----------------------- IDs ----------------------- */
+#helpWindowContent, #settingsWindowContent, #colorUIWindowContent {
+    width: 700px;
+    height: 450px;
+}
+
+#dumpAnnotationWindowContent {
+    width: 400px;
+    height: 85px;
+}
+
+#annotationMenu
+{
+    background-color: #B0C4DE;
+    padding: 8px 0;
+    height: auto;
+    max-width: 1000px;
+    z-index: 100;
+    float: left;
+    position: absolute;
+    border-radius: 5px;
+    border: 1px solid black;
+    padding: 5px;
+}
+
+#taskAnnotationCenterPanel {
+    width: 83%;
+    height: 100%;
+    float: left;
+}
+
+#taskAnnotationRightPanel {
+    height: 100%;
+    width: 15%;
+    float: left;
+    margin: 0px 10px;
+}
+
+#uiContent, #trackManagement, #aamMenu, #eventsContent, #framePropsContent, #segmentContent, #segmentManagement {
+    border-bottom: 1px solid black;
+    border-right: 1px solid black;
+    border-left: 1px solid black;
+    border-radius: 5px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.5);
+    background-color: #B0C4DE;
+    text-align: center;
+}
+
+#shapeLabelSelector, #shapeModeSelector, #shapeTypeSelector, #eventTypeSelector, polyShapeSizeWrapper {
+    width: 80%;
+    margin-left: auto;
+    margin-top: 2%;
+}
+
+#trackManagement, #aamMenu, #segmentManagement {
+    padding: 1em 0;
+    height: auto;
+    width: 100%;
+    margin: 10px 0px;
+}
+
+.tool {
+    width: 18%;
+    height: 20%;
+    cursor: pointer;
+}
+
+.tool:hover {
+    fill: #1b718e;
+}
+
+.selectedTool {
+    fill: #1b718e;
+}
+
+.nonSelectedTool {
+    fill: #e5f1f6c4;
+}
+
+#specificFrameTags {
+    border-top: 1px rgb(105, 105, 105) solid;
+}
+
+#aamMenu {
+    text-align: center;
+}
+
+#aamHelpContainer {
+    text-align: left;
+    margin-left: 5px;
+    overflow-y: auto;
+}
+
+#uiContent, #eventsContent, #framePropsContent, #segmentContent  {
+    height: 53%;
+    width: 100%;
+    border-radius: 0px 0px 5px 5px;
+    overflow-y: auto;
+}
+
+#segmentContent {
+    height: 52%;
+}
+
+#player {
+    margin: auto;
+    width: 100%;
+    height: 100%;
+}
+
+#playerFrame {
+    width: 100%;
+    height: 80%;
+    border: 1px black solid;
+    border-radius: 5px;
+    background-color: #B0C4DE;
+    overflow: hidden;
+    position: relative;
+}
+
+#frameContent {
+    position: absolute;
+    z-index: 1;
+    outline: 10px solid black;
+    -moz-transform-origin: top left;
+    -webkit-transform-origin: top left;
+}
+
+#frameGrid {
+    position: absolute;
+    z-index: 2;
+    -moz-transform-origin: top left;
+    -webkit-transform-origin: top left;
+    pointer-events: none;
+}
+
+#frameBackground {
+    position: absolute;
+    z-index: 0;
+    background-repeat: no-repeat;
+    -moz-transform-origin: top left;
+    -webkit-transform-origin: top left;
+}
+
+#watershed {
+    background-color: #61b7d4;
+    border-radius: 0.6em;
+    border-style: solid;
+    border-color: #1b718e;
+}
+
+.painting {
+    position: absolute;
+    -moz-transform-origin: top left;
+    -webkit-transform-origin: top left;
+}
+
+#frameWatershed {
+    opacity: 0.5;
+    z-index: 9;
+    position: absolute;
+    background-repeat: no-repeat;
+    -moz-transform-origin: top left;
+    -webkit-transform-origin: top left;
+}
+
+#paintingCanvas {
+    opacity: 0.6;
+    z-index: 8;
+}
+
+#cursorCanvas {
+    opacity: 0.6;
+    z-index: 10;
+    cursor: none;
+}
+
+.color-picker {
+    width: 90%;
+    border-radius: 0.5em 0em 0em 0.5em;
+    font-weight: bold;
+    float: right;
+    cursor: pointer;
+    transition: width .2s ease-out;
+    color: white;
+    text-shadow: 0px 0px 3px black;
+}
+
+.selected-color {
+    width: 100%;
+    transition: width .2s ease-out;
+}
+
+.Ids-ring {
+    display: inline-block;
+    position: relative;
+    width: 30px;
+    height: 20px;
+}
+
+.Ids-ring div {
+	box-sizing: border-box;
+	display: block;
+	position: absolute;
+    width: 20px;
+    height: 20px;
+	margin: auto 10px auto auto;
+	border: 3px solid #5f5f5f;
+	border-radius: 50%;
+	animation: Ids-ring 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+	border-color: #5f5f5f transparent transparent transparent;
+}
+
+.Ids-ring div:nth-child(1) {
+	animation-delay: -0.45s;
+}
+
+.Ids-ring div:nth-child(2) {
+	animation-delay: -0.3s;
+}
+
+.Ids-ring div:nth-child(3) {
+	animation-delay: -0.15s;
+}
+
+@keyframes Ids-ring {
+	0% {
+		transform: rotate(0deg);
+	}
+	100% {
+		transform: rotate(360deg);
+	}
+}
+
+#frameLoadingAnimation {
+    fill-opacity: 0;
+    stroke: #09c;
+    stroke-width: 3px;
+    stroke-dasharray: 50;
+    animation: dash 1s linear infinite;
+}
+
+#frameLoadingAnim {
+    z-index: 2;
+    position: absolute;
+}
+
+#annotationStatisticTable {
+    margin: 0px auto;
+    border: 1px solid dimgrey;
+    border-radius: 6px;
+    text-align: left;
+    width: 100%;
+    text-align: center;
+}
+
+#playerPanel {
+    width: 100%;
+    height: 5%;
+}
+
+#playerSettings {
+    width: 50%;
+    height: 100%;
+}
+
+#playerStep {
+   width: 2em;
+}
+
+
+
+#filterInputString {
+    margin-right: 10px;
+    width: 200px;
+}
+
+#playerProgress {
+    overflow: hidden;
+    -webkit-appearance: none;
+    margin-top: 1.1%;
+    position: absolute;
+    background-color: transparent;
+}
+
+#playerProgress::-webkit-slider-runnable-track {
+    -webkit-appearance: none;
+    color: #13bba4;
+    margin-top: -1px;
+    height: 100%;
+    cursor: pointer;
+    background: transparent;
+    border-radius: 3px;
+    border: 1px solid #010101;
+}
+
+#playerProgress::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    background: #005875;
+    box-shadow: -1500px 0 0 1500px #0099cc;
+    
+    border: 1px solid #000000;
+    height: 36px;
+    width: 6px;
+    border-radius: 3px;
+    cursor: pointer;
+    margin-top: -10px;
+}
+
+#progress {
+    height: 30px;
+    right: 0;
+    background: lightgrey;
+    top: 0;
+    left: -6px;
+    width: 0%;
+    -webkit-border-radius: 1px;
+    border-radius: 1px;
+    transition: width 500ms ease-out,opacity 400ms linear
+}
+
+@keyframes pulse {
+    30% {
+        opacity: 1
+    }
+    60% {
+        opacity: 0
+    }
+    100% {
+        opacity: 1
+    }
+}
+
+#container {
+    position: relative;
+}
+
+#progress {
+    width: 100%;
+    height: 25px;
+    top: 0;
+    left: 0;
+    margin-left: 0px;
+    border-radius: 3px;
+    border: 1px solid #010101;
+}
+
+#wrapper {
+    margin-top:1.1%;
+    margin-left: 385px;
+    position: absolute;
+}
+
+#playerProgress::-moz-range-track {
+    height: 90%;
+    cursor: pointer;
+    background: #09c;
+    border-radius: 3px;
+    border: 1px solid #010101;
+}
+
+#playerProgress::-moz-range-thumb {
+    border: 1px solid #000000;
+    height: 36px;
+    width: 16px;
+    border-radius: 3px;
+    background: #ffffff;
+    cursor: pointer;
+}
+
+#playerProgress::-moz-focus-outer { border: 0; }
+
+#loadSpecificFrameTags:invalid {
+    color: red;
+}
+
+#loadSpecificFrameTags:valid {
+    color: green;
+}
+
+@keyframes dash {
+    0%   {stroke-dashoffset: 1; stroke: #09c;}
+    50%  {stroke-dashoffset: 100; stroke: #f44;}
+    100% {stroke-dashoffset: 300; stroke: #09c;}
+}
+
+#validationDiv {
+    float: right;
+    margin-top: 15px;
+}
+
+#acceptValidationRequest {
+    color: green;
+}
+
+#rejectValidationRequest {
+    color: red;
+}
+
+.validationButton {
+    background: transparent;
+    border: transparent;
+    font-size: 25px;
+    cursor: pointer;
+}
+
+/* ----------------------- Viewport ---------------------- */
+@media only screen and (min-width: 1200px) {
+    /* For desktop: small screens */
+
+    #sidenavContainer {
+        width: 96.7%
+    }
+}
+
+@media only screen and (min-width: 1800px) {
+    /* For desktop: wide screens */
+
+    #sidenavContainer {
+        width: 97.1%
+    }
+}

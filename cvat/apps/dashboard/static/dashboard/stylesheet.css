@@ -1,0 +1,438 @@
+/*
+ * Copyright (C) 2018 Intel Corporation
+ *
+ * SPDX-License-Identifier: MIT
+ */
+ input {
+    border-radius: 0.3em;
+ }
+
+ .hideCreateButton {
+    color: transparent;
+    background-color: transparent;
+    border: none
+ }
+
+ button {
+    cursor: pointer;
+    border: groove;
+    background-color: #e7e3e3c4;
+    border-radius: 0.3em;
+ }
+
+.dashboardTaskUI {
+    margin: 5px auto;
+    width: 1200px;
+    height: 335px;
+    background-color: #e7edf5;
+    border: 1px solid;
+    border-radius: 5px;
+}
+
+.dashboardAssignedUser {
+    margin-left: 20px;
+    background: linear-gradient(#f9f9f9, #c4cfe0); 
+    border-radius: 0.3em;
+    padding: 7px; 
+    font-size: 1.22em;
+}
+
+.dashboardTaskIntro {
+    width: 25%;
+    height: 75%;
+    float: left;
+    margin-left: 20px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.dashboardButtonsUI {
+    margin-top: 1%;
+    width: 50%;
+    height: 75%;
+    float: left;
+    overflow-y: auto;
+}
+
+.dashboardValidationUI {
+    width: 23%;
+    height: 75%;
+    float: left;
+    text-align: center;
+    margin-top: -1.2%;
+}
+
+.dashboardButtonUI {
+    display: block;
+    width: 70%;
+    height: 2.5em;
+    margin: auto;
+    margin-top: 0.1em;
+    margin-bottom: 1em;
+    font-size: 1em;
+}
+
+button.dashboardDumpAnnotation {
+    margin-top: 0.6em;
+}
+
+.dashboardJobsUI {
+    width: 40%;
+    height: 75%;
+    float: left;
+    text-align: center;
+}
+
+.dashboardJobList {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+    width: 100%;
+    margin-top: 15px;
+}
+
+.dashboardValidationButton {
+    background: transparent;
+    border: transparent;
+    font-size: 35px;
+    cursor: pointer;
+}
+
+.dashboardAcceptValidation {
+    color: green;
+}
+
+.dashboardRejectRequest {
+    color: red;
+}
+
+.dashboardTitleWrapper {
+    overflow: hidden;
+}
+
+#dashboardSearchInput {
+    padding: 0.38em;
+    border: 1px solid grey;
+    float: left;
+    width: 65%;
+    background: #f1f1f1;
+    border-radius: 10px;
+    outline: 0;
+}
+
+#dashboardSearchSubmit {
+    float: left;
+    width: 20%;
+    padding: 10px;
+    background: #0b7dda;
+    color: white;
+    border: 1px solid grey;
+    border-left: none;
+    cursor: pointer;
+    outline: 0;
+}
+
+#dashboardSearchSubmit:hover {
+    background: #4c92ee;
+}
+
+#dashboardSearchSubmit:active {
+    background: #0b7fff;
+}
+
+#dashboardCreateTaskButton {
+    font-size: 2em;
+}
+
+#dashboardCreateContent, #labelAddModalForm {
+    width: 500px;
+    display: table;
+    text-align: center;
+}
+
+#dumpAnnotationWindowContent {
+    width: 400px;
+    height: 85px;
+}
+
+#dashboardShareBrowser, #dashboardSortedBrowser {
+    width: 100%;
+    height: 80%;
+    border: 1px solid black;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    overflow: auto;
+}
+
+.hiddenClass {
+    display: none;
+}  
+
+.nudgeDown {
+    margin-top: 20px;
+}
+
+.rightPanels {
+    float: right;
+    background-color: #dedede78;
+    padding: 13px 16px;
+}
+
+.rightPanelsHeaders {
+    font-family: Arial;
+    background-color: inherit;
+    font-size: 14px;
+}
+
+.rightPanelDropdowns {
+    border: none;
+    border-left: 1px solid #c3c3c3;
+    border-right: 1px solid #c3c3c3;
+    outline: none;
+    cursor: pointer;
+    width: 130px;
+}
+
+.dashboardCommentLabel {
+    color: red;
+    font-size: 0.85em;
+}
+
+#sortTasksDropdown {
+    width: 100px;
+}
+
+#userFilterDropdown {
+    border-right: none;
+}
+
+.selectAnnotator {
+    width: 90%;
+    border-radius: 4px;
+    border: 2px inset;
+}
+
+.dashboardLabelBrowserStyle {
+    width: 100%;
+    height: 80%;
+    border: 1px solid black;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    overflow: auto;
+}
+
+#dashboardUpdateContent {
+    width: 400px;
+    height: 230px;
+}
+
+
+#dashboardOldLabels {
+    width: 97%;
+    margin-bottom: 10px;
+}
+
+
+#dashboardNewLabels {
+    width: 97%;
+    margin-bottom: 10px;
+}
+
+#dashboardProjectSelectorPrev, #dashboardProjectSelectorNext {
+    text-decoration: none;
+    display: inline-block;
+    padding: 8px 2px;
+    font-size: 30px;
+}
+
+a {
+    background: transparent;
+    text-decoration: none;
+    color: black;
+}
+
+a.dashboardTaskNameLabel:hover {
+    color: #0099cc;
+    cursor: pointer;
+}
+
+.previous, .next {
+    border-color: transparent;
+    background-color: transparent;
+    color: black;
+}
+
+.dropbtn {
+    border: none;
+    cursor: pointer;
+    font-size: xx-large;
+}
+
+.dropdown{
+    position: relative;
+    display: inline-block;
+}
+
+.show{
+    display: block!important;
+}
+
+.dropdown-content {
+    left: -120px;
+    display: none;
+    position: absolute;
+    z-index: 1;
+    min-width: 160px;
+    background-color: rgba(24, 24, 24, 0.5);
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+}
+
+.dropdown-content a {
+    display: block;
+    text-decoration: none;
+    color: white;
+    padding: 5px;
+    font-family: 'BarlowSemiCondensed-Regular';
+    margin-block-start: 1em;
+    margin-block-end: 1em;
+    margin-inline-start: 0px;
+    margin-inline-end: 0px;
+}
+
+.dropdown-content p {
+    display: block;
+    text-align: center;
+    text-decoration: none;
+    color: white;
+    padding: 5px;
+    font-family: 'BarlowSemiCondensed-Regular';
+    font-size: 1.1em;
+    background: lightgrey;
+    color: black;
+}
+
+.dropdown-content a:hover {
+    color: black;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.dropbtn:focus {
+    outline: 0;
+}
+
+.statustab {
+    overflow: hidden;
+    border: 1px solid #ccc;
+    border-bottom: none;
+    background-color: #f1f1f1;
+    margin: 10px auto;
+    width: 1200px;
+    border-radius: 18px 18px 3px 3px;
+    margin-bottom: 0;
+}
+
+.statustab button {
+    background-color: inherit;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    transition: 0.3s;
+}
+
+.statustab button:hover {
+    background-color: #ddd
+}
+
+.statustab button.active {
+    background-color: #ccc;
+}
+
+.statustab_content {
+    display: none;
+    padding: 6px 12px;
+    border-top: none;
+    animation: fadeEffect 1s;
+}
+
+.settingstab {
+    overflow: hidden;
+    border: 1px solid #ccc;
+    background-color: #f1f1f1;
+    margin: 10px auto;
+    width: 1200px;
+    border-radius: 18px 18px 3px 3px;
+    margin-bottom: 0;
+}
+
+.settingstab button {
+    background-color: inherit;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    transition: 0.3s;
+}
+
+.settingstab button:hover {
+    background-color: #ddd
+}
+
+.settingstab button.active {
+    background-color: #ccc;
+}
+
+.settingstab_content {
+    display: none;
+    padding: 6px 12px;
+    border-top: none;
+    animation: fadeEffect 1s;
+}
+
+.updatetab {
+    overflow: hidden;
+    border: 1px solid #ccc;
+    background-color: #f1f1f1;
+    margin: 10px auto;
+    border-radius: 18px 18px 3px 3px;
+    margin-bottom: 0;
+}
+
+.updatetab button {
+    background-color: inherit;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    transition: 0.3s;
+}
+
+.updatetab button:hover {
+    background-color: #ddd
+}
+
+.updatetab button.active {
+    background-color: #ccc;
+}
+
+.updatetab_content {
+    display: none;
+    padding: 6px 12px;
+    border-top: none;
+    animation: fadeEffect 1s;
+}
+
+.updatetab_content h2 {
+    font-family: Arial;
+}
+
+@keyframes fadeEffect {
+    from {opacity: 0;}
+    to {opacity: 1;}
+}

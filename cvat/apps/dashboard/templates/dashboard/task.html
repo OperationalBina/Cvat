@@ -1,0 +1,70 @@
+<!--
+    Copyright (C) 2018 Intel Corporation
+
+    SPDX-License-Identifier: MIT
+-->
+<div class="dashboardTaskUI" id="dashboardTask_{{item.id}}" project="{{item.project.name}}">
+    <input id="date_{{item.id}}" type="hidden" value='{{item.created_date|date:"r"}}'> <!-- date:"r" formats django date to a format js knows -->
+    <input id="score_{{item.id}}" type="hidden" value="{{item.score}}">
+    {% for segm in item.segment_set.all %}
+        {% for job in segm.job_set.all %}
+            <table style="width: 100%;">
+                <tbody>
+                    <tr style="width: 100%;">
+                        <td style="width: 33%;">
+                            <div>
+                                <label class="semiBold dashboardAssignedUser" value="{{item.assignee.id}}">&#x1F464; {{item.assignee}}</label>
+                            </div>
+                        </td>
+                        <td style="width: 37%;">
+                            <center class="dashboardTitleWrapper" style="margin-top: 15px;">
+                                <a class="semiBold h1 dashboardTaskNameLabel selectable" href="{{base_url}}?id={{job.id}}" style="font: 400 13.3333px Arial; font-size: 40px;"> {{ item.name }} </a>
+                                {% if item.priority %}
+                                    <span style="font-family: Arial;">({{ item.priority }})</span>
+                                {% else %}
+                                    <span style="font-family: Arial;">(Score: {{ item.score }})</span>
+                                {% endif %}
+                            </center>
+                        </td>
+                        <td style="width: 30%;"></td>
+                    </tr>
+                </tbody>
+            </table>
+            <a href="{{base_url}}?id={{job.id}}"><div class="dashboardTaskIntro" style='background-image: url("/get/task/{{item.id}}/frame/0")'></div></a>
+        {% endfor %}
+    {% endfor %}
+    <div class="dashboardButtonsUI">
+        <button class="dashboardDumpAnnotation semiBold dashboardButtonUI"> Dump Annotation </button>
+        <button class="dashboardUploadAnnotation semiBold dashboardButtonUI"> Upload Annotation </button>
+        <button class="dashboardUpdateTask semiBold dashboardButtonUI isManager"> Update Task </button>
+        <button class="dashboardDeleteTask semiBold dashboardButtonUI isManager"> Delete Task </button>
+         {% if item.bug_tracker %}
+            <button class="dashboardOpenTrackerButton semiBold dashboardButtonUI"> Open Bug Tracker </button>
+            <a class="dashboardBugTrackerLink" href='{{item.bug_tracker}}' style="display: none;"> </a>
+        {% endif %}
+    </div>
+    <div class="dashboardValidationUI">
+        {% if item.status == "annotation" %}
+            <label class="semiBold h1 selectable" style="display:block; margin-bottom:10px;"> Validation: </label>
+            <button class="dashboardRequestValidation semiBold dashboardButtonUI"> Request Validation </button>
+            {% if item.has_comments %}
+                <label class="semiBold selectable dashboardCommentLabel">This task returned with comments...</label>
+            {% endif %}
+        {% elif item.status == "validation" %}
+            <label class="semiBold h1 selectable isManager" style="display:block; margin-bottom:10px;"> Validation: </label>
+            <div>
+                <button class="dashboardFinishTask semiBold dashboardValidationButton dashboardAcceptValidation isManager"> ✓ </button>
+                <button class="dashboardRejectRequest semiBold dashboardValidationButton dashboardRejectValidation isManager"> ✗ </button>
+            </div>
+            {% if item.has_comments %}
+                <label class="semiBold selectable dashboardCommentLabel">You might want to review existing comments before accepting.</label>
+            {% endif %}
+        {% else %}
+            <label class="semiBold h1 selectable isManager" style="display:block; margin-bottom:10px;"> Validation: </label>
+            <button class="semiBold dashboardRejectValidation isManager dashboardButtonUI"> Re-Open Task </button>
+            {% if item.has_comments %}
+                <label class="semiBold selectable dashboardCommentLabel">Re-opening the task will reload its comments.</label>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>

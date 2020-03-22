@@ -1,0 +1,531 @@
+<!--
+    Copyright (C) 2018 Intel Corporation
+
+    SPDX-License-Identifier: MIT
+-->
+{% extends 'engine/base.html' %}
+{% load static %}
+{% load pagination_tags %}
+
+{% block head_title %}
+    CVAT Dashboard
+{% endblock %}
+
+{% block head_css %}
+    {{ block.super }}
+    <link rel="stylesheet" type="text/css" href="{% static 'dashboard/stylesheet.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'dashboard/widgets.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'dashboard/js/3rdparty/jstree/themes/default/style.css' %}">
+{% endblock %}
+
+{% block head_js_3rdparty %}
+    {{ block.super }}
+    <script type="text/javascript" src="{% static 'dashboard/js/3rdparty/jstree/jstree.js' %}"></script>
+    {% for js_file in js_3rdparty %}
+        <script type="text/javascript" src="{% static js_file %}" defer></script>
+    {% endfor %}
+{% endblock %}
+
+{% block head_js_cvat %}
+    {{ block.super }}
+    <script type="text/javascript" src="{% static 'dashboard/js/settings.js' %}"></script>
+    <script type="text/javascript" src="{% static 'dashboard/js/dashboard.js' %}"></script>
+    <script type="text/javascript" src="{% static 'dashboard/js/projectManager.js' %}"></script>
+    <script type="text/javascript" src="{% static 'engine/js/listener.js' %}"></script>
+    <script type="text/javascript" src="{% static 'engine/js/labelsInfo.js' %}"></script>
+    <script type="text/javascript" src="{% static 'engine/js/shapes.js' %}"></script>
+    <script type="text/javascript" src="{% static 'engine/js/annotationParser.js' %}"></script>
+    <script type="text/javascript" src="{% static 'engine/js/server.js' %}"></script>
+    <script>
+        window.maxUploadSize = {{ max_upload_size }};
+        window.maxUploadCount = {{ max_upload_count }};
+    </script>
+    <script>
+        /*
+            When the user clicks on the button, toggle bwtween hiding and showing the dropdown content
+        */
+        function openAndCloseDropdown(){
+            document.getElementById("myDropdown").classList.toggle("show");
+        }
+
+        /*
+            Close the dropdown if the user clicks outside of it
+        */
+        window.onclick = function(event){
+            if(!event.target.matches(".dropbtn")){
+                if(document.getElementById("myDropdown").classList.contains("show")){
+                    openAndCloseDropdown();
+                }
+            }
+        }
+    </script>
+
+    <!-- Matomo -->
+    <script type="text/javascript">
+        $.ajax({
+            type: 'POST',
+            url: `get/matomo`,
+            contentType: "application/json; charset=utf-8",
+            success: (data) => {
+                if(data) {
+                    useMatomo(data.url, data.siteId, data.userId)
+                }
+            },
+            error: (data) => {
+                console.log("-- Error getting Matomo URL --")
+            }
+        });
+
+        function useMatomo(url, siteId, userId) {
+            /* tracker methods like "setCustomDimension" should be called before "trackPageView" */
+            _paq.push(['setUserId', userId])
+            _paq.push(['trackPageView', 'Dashboard']);
+            _paq.push(['enableLinkTracking']);
+            (function() {
+                var u=url;
+                _paq.push(['setTrackerUrl', u+'piwik.php']);
+                _paq.push(['setSiteId', siteId]);
+                var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+                g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
+            })();
+        }
+        var _paq = _paq || [];
+        
+    </script>
+    <!-- End Matomo Code -->
+
+{% endblock %}
+
+{% block content %}
+    <div id="content">
+        <center>
+            <table style="width: 1210px;">
+                <tr>
+                    <td style="width: 30%;"><button id="dashboardCreateTaskButton" class="regular h1"> Create New Task </button></td>
+                    <td style="width: 2%;"><button id="dashboardProjectSelectorPrev" class="previous"> &#8249; </button></td>
+                    <td style="width: 29%;"><center><strong id="dashboardProjectsName" class="regular h1"></strong></center></td>
+                    <td style="width: 2%;"><button id="dashboardProjectSelectorNext" class="next"> &#8250; </button></td>
+                    <td>
+                        <div>
+                            <div class="dropdown" style="float:right;">
+                                <button onclick="openAndCloseDropdown()" class="dropbtn"> &#9776; </button>
+                                <div id="myDropdown" class="dropdown-content">
+                                    {% if user.is_authenticated %}
+                                
+                                    {% if user.first_name and user.last_name %}
+                                        <p> Hello, {{ user.first_name }} {{ user.last_name }}</p>
+                                    {% else %}
+                                        <p> Hello, {{ user.username }}</p>
+                                    {% endif %}
+                                    <a class="isManager" id="showAddLabelModalButton">&#9881&nbsp;Settings</a>
+                                    <a class="isManager" id="showProjectManagerModalButton">&#9812&nbsp;Manager Panel</a>
+                                    <a href="/admin" id="showAdminPanel" class="isAdmin">&#9813&nbsp;Admin Panel</a>
+                                    <a href="{% url 'logout' %}">&#10006&nbsp;Logout</a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <input type="text" id="dashboardSearchInput" class="regular h1" placeholder="Search.." name="search" style="float:right; margin-right: 15px;">
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </center>
+
+        
+        <div style="float: left; width: 100%">
+            <div class="statustab">
+                <button id="open_tasks_button" class="statustab_link" id="default_statustab" onclick="switchTask(event, 'status_open')">Open ({{ open_tasks }})</button>
+                <button id="pending_tasks_button" class="statustab_link" onclick="switchTask(event, 'status_pending')">Pending ({{ pending_tasks }})</button>
+                <button id="closed_tasks_button" class="statustab_link" onclick="switchTask(event, 'status_closed')">Closed ({{ closed_tasks }})</button>
+                <select id="userFilterDropdown" class="rightPanels rightPanelDropdowns isManager"><option>All Users</option></select>
+                <span class="rightPanels rightPanelsHeaders isManager">Show tasks by:</span>
+                <select id="sortTasksDropdown" class="rightPanels rightPanelDropdowns">
+                    <option id="sortby_score" value="score"></option>
+                    <option id="sortby_date" value="date">Date</option>
+                </select>
+                <span class="rightPanels rightPanelsHeaders">Order by:</span>
+            </div>
+            <div id="status_open" class="statustab_content">
+                {% autopaginate open_data 1000000 %}
+
+                {% for item in open_data %}
+                    {% include "dashboard/task.html" %}                  
+                {% endfor %}
+
+                <center>{% paginate %}</center>
+            </div>
+            <div id="status_pending" class="statustab_content">
+                {% autopaginate pending_data 1000000 %}
+
+                {% for item in pending_data %}
+                    {% include "dashboard/task.html" %}
+                {% endfor %}
+
+                <center>{% paginate %}</center>
+            </div>
+            <div id="status_closed" class="statustab_content">
+                {% autopaginate closed_data 1000000 %}
+
+                {% for item in closed_data %}
+                    {% include "dashboard/task.html" %}
+                {% endfor %}
+
+                <center>{% paginate %}</center>
+            </div>
+  
+        </div>
+        
+    </div>
+
+    <div id="dumpAnnotationWindow" class="modal hidden">
+        <div id="dumpAnnotationWindowContent" class="modal-content">
+            <label class="h1 semiBold"> Choose annotation type to dump: </label> <br>
+            <div>
+                <button id="dumpObjectsButton" class="regular h1" style="margin-top: 15px;"> Objects </button>
+                <button id="dumpSegmentationButton" class="regular h1" style="margin-top: 15px; margin-left: 20px;"> Segmentation </button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="dashboardCreateModal" class="modal hidden">
+        <form id="dashboardCreateContent" class="modal-content" autocomplete="on" onsubmit="return false">
+            <center>
+                <label class="semiBold h1"> Task Configuration </label>
+            </center>
+
+
+            <table style="width: 100%; text-align: left;">
+                <tr>
+                    <td> <label class="regular h2"> Source: </label> </td>
+                    <td>
+                        <input id="dashboardLocalSource" type="radio" name="sourceType" value="local" checked=true/> <label id="dashboardLocalSourceId" for="dashboardLocalSource" class="regular h2" for="localSource"> Local </label>
+                        <br> <input id="dashboardShareSource" type="radio" name="sourceType" value="share"/> <label id="dashboardShareSourceId" for="dashboardShareSource" class="regular h2" for="shareSource"> Object Storage </label>
+                        <br> <input id="dashboardSortedSource" type="radio" name="sourceType" value="sorted"/> <label id="dashboardSortedSourceId" for="dashboardSortedSource" class="regular h2" for="sortedSource"> Sorted </label>
+                    </td>
+                </tr>
+                <tr>
+                    <td> <label class="regular h2"> Files: </label> </td>
+                    <td>
+                            <button id="dashboardSelectFiles" class="regular h2"> Select Files </button>
+                            <label id="dashboardFilesLabel" class="regular h2" style="margin-left: 10px"> No Files </label>
+                            <input id="dashboardLocalFileSelector" type="file" style="display: none" multiple/>
+                    </td>
+                </tr>
+                <tr>
+                        <td style="width: 25%"> <label class="regular h2"> Name: </label> </td>
+                        <td> <input type="text" id="dashboardNameInput" class="regular" style="width: 90%"/> </td>
+                </tr>
+                <tr>
+                    <td style="padding-bottom: 15px; padding-top: 15px;"> <hr> </td>
+                    <td> <hr> </td>
+                </tr>
+                <tr>
+                    <td> <label class="regular h2"> Labels: </label> </td>
+                    <td>
+                        <button id="dashboardSelectLabels" class="regular h2"> Select Labels </button>
+                    </td>
+                </tr>
+                <tr>
+                    <td> <label class="regular h2"> Frame properties: </label> </td>
+                    <td>
+                        <button id="dashboardSelectFrameProperties" class="regular h2"> Select Properties </button>
+                    </td>
+                </tr>
+                <tr id="priorityInput">
+                    <td> <label class="regular h2"> Priority: </label> </td>
+                    <td>
+                        <form>
+                            <input type="radio" name="priorityRadio" id="priority_low" value=0 checked><span> Low</span>
+                            <input type="radio" name="priorityRadio" id="priority_medium" value=0.5><span> Medium</span>
+                            <input type="radio" name="priorityRadio" id="priority_high" value=1><span> High</span>
+                        </form>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label class="regular h2"> Annotator: </label>
+                    </td>
+                    <td>
+                        <select id="dashboardSelectAnnotator" class="selectAnnotator"></select>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="padding-bottom: 15px; padding-top: 15px;"> <hr> </td>
+                    <td> <hr> </td>
+                </tr>
+                <tr>
+                    <td> <label class="regular h2"> Bug Tracker: </label> </td>
+                    <td> <input type="text" id="dashboardBugTrackerInput" class="regular" style="width: 90%", placeholder="Please specify full URL"/> </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label class="regular h2"> Flip images </label>
+                    </td>
+                    <td>
+                        <input type="checkbox" id="dashboardFlipImages"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label class="regular h2"> Z-Order </label>
+                    </td>
+                    <td>
+                        <input type="checkbox" id="dashboardZOrder"/>
+                    </td>
+                </tr>
+                <tr>
+                        <td>
+                            <label class="regular h2"> Overlap Size </label>
+                        </td>
+                        <td>
+                            <input type="number" id="dashboardOverlap" class="regular" max="50000" min="0" value="0" disabled=true/>
+                            <input type="checkbox" id="dashboardCustomOverlap" title="Custom overlap size"/>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <label class="regular h2"> Image Quality </label>
+                        </td>
+                        <td>
+                            <input type="number" id="dashboardImageQuality" class="regular" style="width: 4.5em;" max="95" min="1" value="95" disabled=true/>
+                            <input type="checkbox" id="dashboardCustomQuality" title="Custom image quality"/>
+                        </td>
+                    </tr>
+            </table>
+
+            <div style="width: 100%; height: 14%; padding-top: 10px;">
+                <div style="float: left; height: 50px;  overflow: auto; width: 63%; height: auto;">
+                    <label id="dashboardCreateTaskMessage" class="regular h2 selectable" style="float:left;">  </label>
+                </div>
+                <div style="float: right; width: 35%; height: 50px;">
+                    <button id="dashboardCancelTask" class="regular h2"> Cancel </button>
+                    <button id="dashboardSubmitTask" class="regular h2"> Submit </button>
+                </div>
+            </div>
+            
+        </form>
+    </div>
+
+    <div id="dashboardLabelAddModal" class="modal hidden">
+        <form id="labelAddModalForm" class="modal-content" autocomplete="on" onsubmit="return false" style="padding-top:0px;">
+            <div class="settingstab" style="width: 100%;margin-bottom: 20px;">
+                <button class="settingstab_link active" id="labelsSettingstab">Labels</button>
+                <button class="settingstab_link" id="framePropertiesSettingstab">Frame Properties</button>
+                <button class="settingstab_link" id="projectsSettingstab">Projects</button>
+            </div>
+            <div id="labels_config" class="settingstab_content">
+                <center>
+                    <label class="semiBold h1"> Label Configuration </label>
+                </center>
+                <div id="dashboardEditLabelsModal" class="modal-content" style="text-align: left; margin: 3% auto; height: 250px;">
+                    <div id="dashboardEditLabels" style="height: 100%; overflow: auto;"> </div>
+                </div>
+                <div id="colorDiv" style="display: none;">
+                    <input id="label_colorpicker" type="color">
+                    <input style="margin-left: 10px; width: 60px;" id="label_colortext" type="text" placeholder="#ffffff">
+                    <label id="color_error" class="regular h2 selectable" hidden style="margin-left: 5px;">Another label already has this color.</label>
+                </div>
+                <div style="margin-top: 25px; margin-bottom: 20px;">
+                    <button class="dashboardValidationButton" id="newLabelButton" style="color: green"> &#43; </button>
+                    <button class="dashboardValidationButton" id="renameLabelButton" style="margin: 0 2%; color: #ffcc00"> &#9998; </button>
+                    <button class="dashboardValidationButton" id="removeLabelButton" style="color: red"> &#128465; </button>
+                </div>
+                <div style="width: 100%; height: 14%; padding-top: 10px;">
+                    <div style="float: left; height: 50px;  overflow: auto; width: 63%; height: auto;">
+                        <label id="dashboardLabelTaskMessage" class="regular h2 selectable" style="float:left;">  </label>
+                    </div>
+                </div>
+            </div>
+            <div id="properties_config" class="settingstab_content">
+                <center>
+                    <label class="semiBold h1"> Frame Property Configuration </label>
+                </center>
+                <div id="dashboardEditFrameProepertiesModal" class="modal-content" style="text-align: left; margin: 3% auto; height: 250px;">
+                    <div id="dashboardEditFrameProeperties" style="height: 100%; overflow: auto;"> </div>
+                </div>
+                <div style="margin-top: 25px; margin-bottom: 20px;">
+                    <button class="dashboardValidationButton" id="newFramePropertyButton" style="color: green"> &#43; </button>
+                    <button class="dashboardValidationButton" id="renameFramePropertyButton" style="margin: 0 2%; color: #ffcc00"> &#9998; </button>
+                    <button class="dashboardValidationButton" id="removeFramePropertyButton" style="color: red"> &#128465; </button>
+                </div>
+                <div style="width: 100%; height: 14%; padding-top: 10px;">
+                    <div style="float: left; height: 50px;  overflow: auto; width: 63%; height: auto;">
+                        <label id="dashboardFramePropertyMessage" class="regular h2 selectable" style="float:left;">  </label>
+                    </div>
+                </div>
+            </div>
+            <div id="projects_config" class="settingstab_content isAdmin">
+                <center>
+                    <label class="semiBold h1"> Project Configuration </label>
+                </center>
+                <div id="dashboardEditProjectsModal" class="modal-content" style="text-align: left; margin: 3% auto; height: 250px;">
+                    <div id="dashboardEditProjects" style="height: 100%; overflow: auto;"> </div>
+                </div>
+                <div id="hasScoreDiv">
+                    <input id="isProjectScored" type="checkbox" class="regular h2" style="margin-left: 10px; margin-top: 1%;">
+                    <label for="isProjectScored"> Has score?</label>
+                </div>
+                <div style="margin-top: 25px; margin-bottom: 20px;">
+                    <button class="dashboardValidationButton" id="newProjectButton" style="color: green"> &#43; </button>
+                    <button class="dashboardValidationButton" id="renameProjectButton" style="margin: 0 2%; color: #ffcc00"> &#9998; </button>
+                    <button class="dashboardValidationButton" id="removeProjectButton" style="color: red"> &#128465; </button>
+                </div>
+                <div style="width: 100%; height: 14%; padding-top: 10px;">
+                    <div style="float: left; height: 50px;  overflow: auto; width: 63%; height: auto;">
+                        <label id="dashboardProjectMessage" class="regular h2 selectable" style="float:left;">  </label>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div id="dashboardProjectManagerModal" class="modal hidden">
+        <form id="ProjectManagerModalForm" class="modal-content" autocomplete="on" onsubmit="return false">
+            <center>
+                <label class="semiBold h1"> Manager Panel </label>
+            </center>
+            <center>
+                <div class="selector">
+                    <div class="selector-available" style="width:100px;margin-right: 32px;">
+                        <h2>Projects</h2>
+                        <p id="projectsFilter" class="selector-field">
+                            <label for="projectsFilterInput" style="float:left;">
+                                <span class="help-tooltip search-label-icon"></span>
+                            </label>
+                            <input type="text" placeholder="Search..." id="projectsFilterInput" style="width: 50px;">
+                        </p>
+                        <select name="groups_old" size="20" id="availableProjects" style="width:100px;">
+                        </select>
+                    </div>
+                    <div class="selector-available">
+                        <h2>Available users</h2>
+                        <p id="usersFilter" class="selector-field">
+                            <label for="usersFilterInput" style="float:left;">
+                                <span class="help-tooltip search-label-icon"></span>
+                            </label>
+                            <input type="text" placeholder="Search..." id="usersFilterInput">
+                        </p>
+                        <select name="groups_old" data-field-name="groups" multiple="" class="filtered" data-is-stacked="0" id="availableUsers">
+                        </select>
+                    </div>
+                    <ul class="selector-chooser">
+                        <li><a title="Choose" href="#" id="addSelectedUsers" class="selector-add">Choose</a></li>
+                        <li><a title="Remove" href="#" id="removeSelectedUsers" class="selector-remove">Remove</a></li>
+                    </ul>
+                    <div class="selector-chosen">
+                        <h2>Assigned users</h2>
+                        <p id="assignedUsersFilter" class="selector-field">
+                            <label for="assignedUsersFilterInput" style="float:left;">
+                                <span class="help-tooltip search-label-icon"></span>
+                            </label>
+                            <input type="text" placeholder="Search..." id="assignedUsersFilterInput">
+                        </p>
+                        <select id="assignedUsers" multiple="multiple" size="0" name="groups" class="filtered">
+                        </select>
+                    </div>
+                </div>
+            </center>
+            <div style="width: 100%; height: 14%; padding-top: 10px; display: inline-block;">
+                <div style="float: left; height: 50px;  overflow: auto; width: 63%; height: auto;">
+                    <label id="dashboardProjectManagerMessage" class="regular h2 selectable" style="float:left;">  </label>
+                </div>
+                <div style="float: right; width: 20%; height: 50px;">
+                    <button id="dashboardCancelProjectManager" class="regular h2"> Cancel </button>
+                    <button id="dashboardSubmitProjectManager" class="regular h2"> Submit </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div id="dashboardShareBrowseModal" class="modal hidden">
+        <div style="width: 600px; height: 400px;" class="modal-content noSelect">
+            <center> <label class="regular h1"> Object storage </label> </center>
+            <div id="dashboardShareBrowser"> </div>
+            <center>
+                <button id="dashboardCancelBrowseServer" class="regular h2" style="margin: 0px 10px"> Cancel </button>
+                <button id="dashboardSubmitBrowseServer" class="regular h2" style="margin: 0px 10px"> Submit </button>
+            </center>
+        </div>
+    </div>
+    <div id="dashboardSortedBrowseModal" class="modal hidden">
+        <div style="width: 600px; height: 400px;" class="modal-content noSelect">
+            <center> <label class="regular h1"> Sorted files </label> </center>
+            <div id="dashboardSortedBrowser"> </div>
+            <center>
+                <button id="dashboardSortedCancelBrowseServer" class="regular h2" style="margin: 0px 10px"> Cancel </button>
+                <button id="dashboardSortedSubmitBrowseServer" class="regular h2" style="margin: 0px 10px"> Submit </button>
+            </center>
+        </div>
+    </div>
+
+    <div id="dashboardLabelBrowseModal" class="modal hidden">
+        <div style="width: 600px; height: 400px;" class="modal-content noSelect">
+            <center> <label class="regular h1"> Labels </label> </center>
+            <div id="dashboardLabelBrowser" class="dashboardLabelBrowserStyle"> </div>
+            <center>
+                <button id="dashboardOkBrowseLabel" class="regular h2" style="margin: 0px 10px"> OK </button>
+            </center>
+        </div>
+    </div>
+
+    <div id="dashboardFramePropertiesBrowseModal" class="modal hidden">
+        <div style="width: 600px; height: 400px;" class="modal-content noSelect">
+            <center> <label class="regular h1"> Frame Properties </label> </center>
+            <div id="dashboardFramePropertiesBrowser" class="dashboardLabelBrowserStyle"> </div>
+            <center>
+                <button id="dashboardOkBrowseFrameProperties" class="regular h2" style="margin: 0px 10px"> OK </button>
+            </center>
+        </div>
+    </div>
+
+    <div id="dashboardUpdateModal" class="modal hidden">
+        <div id="dashboardUpdateContent" class="modal-content">
+            <div class="updatetab">
+                <button id="attributes_button" class="updatetab_link" onclick="switchUpdateTab(event, 'attributes_tab')">Attributes</button>
+                <button id="priority_button" class="updatetab_link" onclick="switchUpdateTab(event, 'priority_tab')">Priority</button>
+                <button id="annotator_button" class="updatetab_link" onclick="switchUpdateTab(event, 'annotator_tab')">Annotator</button>
+            </div>
+            <div id="attributes_tab" class="updatetab_content">
+                <h2>Task attributes</h2>
+                <input id="dashboardOldLabels" type="text" readonly=true placeholder="Please Wait.." class="regular h2" hidden>
+                <button id="dashboardNewLabelsBtn" class="regular h2"> Select Labels </button>
+                <button id="dashboardNewPropertiesBtn" class="regular h2"> Select Frame Properties </button>
+            </div>
+            <div id="priority_tab" class="updatetab_content">
+                <h2>Task priority</h2>
+                <form>
+                    <input type="radio" name="updatePriorityRadio" id="update_priority_low" value=0><span> Low</span>
+                    <input type="radio" name="updatePriorityRadio" id="update_priority_medium" value=0.5><span> Medium</span>
+                    <input type="radio" name="updatePriorityRadio" id="update_priority_high" value=1><span> High</span>
+                </form>
+            </div>
+            <div id="annotator_tab" class="updatetab_content">
+                <h2>Task annotator</h2>
+                <select id="updateSelectAnnotator" class="selectAnnotator"></select>
+            </div>
+            <center style="margin-top: 10px;">
+                <button id="dashboardCancelUpdate" class="regular h2"> Cancel </button>
+                <button id="dashboardSubmitUpdate" class="regular h2"> Update </button>
+            </center>
+        </div>
+    </div>
+
+    <div id="dashboardUpdateLabelBrowseModal" class="modal hidden">
+        <div style="width: 600px; height: 400px;" class="modal-content noSelect">
+            <center> <label class="regular h1"> Labels </label> </center>
+            <div id="dashboardUpdateLabelBrowser" class="dashboardLabelBrowserStyle"> </div>
+            <center>
+                <button id="dashboardOkBrowseUpdateLabel" class="regular h2" style="margin: 0px 10px"> OK </button>
+            </center>
+        </div>
+    </div>
+    <div id="dashboardUpdatePropertiesBrowseModal" class="modal hidden">
+        <div style="width: 600px; height: 400px;" class="modal-content noSelect">
+            <center> <label class="regular h1"> Labels </label> </center>
+            <div id="dashboardUpdatePropertiesBrowser" class="dashboardLabelBrowserStyle"> </div>
+            <center>
+                <button id="dashboardOkBrowseUpdateProperties" class="regular h2" style="margin: 0px 10px"> OK </button>
+            </center>
+        </div>
+    </div>
+{% endblock %}

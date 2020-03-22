@@ -1,0 +1,85 @@
+#
+# Copyright (C) 2018 Intel Corporation
+#
+# SPDX-License-Identifier: MIT
+#
+version: "3"
+
+services:
+  cvat-db:
+    container_name: cvat-db
+    image: postgresql
+    ports:
+        - "5432:5432"
+    networks:
+      default:
+        aliases:
+          - cvat-db
+    restart: always
+    environment:
+      POSTGRESQL_USER: root
+      POSTGRESQL_DATABASE: cvat
+      POSTGRESQL_PASSWORD: postgres
+      POSTGRES_USER: root
+      POSTGRES_DB: cvat
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - cvat-db:/var/lib/postgresql/data
+
+  cvat-redis:
+    container_name: cvat-redis
+    image: redis
+    ports:
+        - "6379:6379"
+    networks:
+      default:
+        aliases:
+          - cvat-redis
+    restart: always
+
+  cvat:
+    container_name: cvat
+    image: cvat
+    restart: always
+    depends_on:
+      - cvat-redis
+      - cvat-db
+    ports:
+      - "8080:8080"
+      - "3500:3500"
+      - "7000:7000"
+    build:
+      context: .
+      args:
+        http_proxy:
+        https_proxy:
+        no_proxy:
+        TF_ANNOTATION: "no"
+        USER: "django"
+        DJANGO_CONFIGURATION: "production"
+        WITH_TESTS: "no"
+    environment:
+        ALLOWED_HOSTS: '*'
+        DB_HOST_IP: cvat-db
+        DB_NAME: cvat
+        DB_PASSWORD: postgres
+        DB_USER: root
+        DJANGO_MODWSGI_EXTRA_ARGS: ''
+        REDIS_URL: cvat-redis
+        NUMPROCS: 5
+        API_HOST: rest-cvat:5000
+        API_SECRET: verysecretapi
+        CVAT_API_TOKEN: CVAT_API
+        SECURE_SITE: 'False'
+        API_SECURE_SITE: 'True'
+        WITH_OS: 'False'
+    volumes:
+      - cvat-data:/home/django/data
+      - cvat-keys:/home/django/keys
+      - cvat-logs:/home/django/logs
+
+volumes:
+  cvat-db:
+  cvat-data:
+  cvat-keys:
+  cvat-logs:
