@@ -398,13 +398,15 @@ def DashboardView(request):
     task_list = list(filter(lambda task: request.user.has_perm(
         'engine.task.access', task), task_list))
 
+    comments_task_ids = list(Comments.objects.all().values_list('task__id', flat=True))
+
     open_tasks = list()
     pending_tasks = list()
     closed_tasks = list()
 
     for task in task_list:
         # For each task, check if it has comments.
-        task.has_comments = Comments.objects.filter(task=task).exists()
+        task.has_comments = task.id in comments_task_ids
 
         # Add the "priority" attribute to the python object if its project has_score == false
         if not task.project.has_score:

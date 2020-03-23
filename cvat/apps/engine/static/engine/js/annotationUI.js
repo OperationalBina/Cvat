@@ -853,7 +853,7 @@ function setupMenu(job, shapeCollectionModel, annotationParser, aamModel, player
         });
     })();
 
-    $('#statTaskName').text(job.slug);
+    $('#statTaskName').text(job.slug.substring(0,32) + "...");
     $('#statFrames').text(`[${job.start}-${job.stop}]`);
     $('#statOverlap').text(job.overlap);
     $('#statZOrder').text(job.z_order);
