@@ -18,7 +18,13 @@
                         </td>
                         <td style="width: 37%;">
                             <center class="dashboardTitleWrapper" style="margin-top: 15px;">
-                                <a class="semiBold h1 dashboardTaskNameLabel selectable" href="{{base_url}}?id={{job.id}}" style="font: 400 13.3333px Arial; font-size: 40px;"> {{ item.name }} </a>
+                                <a 
+                                    class="semiBold h1 dashboardTaskNameLabel selectable" 
+                                    href="{{base_url}}?id={{job.id}}" 
+                                    style="font: 400 13.3333px Arial; font-size: 40px;"
+                                    title="{{ item.name }}"> 
+                                    {{ item.name|truncatechars:13 }} 
+                                </a>
                                 {% if item.priority %}
                                     <span style="font-family: Arial;">({{ item.priority }})</span>
                                 {% else %}

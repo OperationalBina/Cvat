@@ -283,10 +283,21 @@ def downloadThread(frames, tid, currentUser):
         if not os.path.isdir(dir_path):
             try:
                 os.mkdir(dir_path)
+            except FileExistsError as e:
+                if not os.path.isdir(dir_path):
+                    try:
+                        os.remove(dir_path)
+                        os.mkdir(dir_path)
+                    except IsADirectoryError as e:
+                        pass
             except OSError as e:
                 if e.errno == errno.EEXIST:
-                    os.remove(dir_path)
-                    os.mkdir(dir_path)
+                    if not os.path.isdir(dir_path):
+                    try:
+                        os.remove(dir_path)
+                        os.mkdir(dir_path)
+                    except IsADirectoryError as e:
+                        pass
         
         if is_downloaded:
             os.rename(frame_path, destination_path)
@@ -313,6 +324,7 @@ def exitProccess(request, tid):
 
     # Stop all of the running threads and delete all leftover images on the server when the user exists the task.
     shutdownThreads(tid, request.user.username)
+    exit_tracking_process(request.user.username, tid)
     for root, dirs, _ in os.walk('/home/django/data/' + str(tid)):
         for d in dirs:
             if os.path.join(root, d).endswith(request.user.username):
@@ -782,12 +794,18 @@ def pause_tracking_all(request, tid, shapeId):
 @permission_required(perm=['engine.task.access'],
     fn=objectgetter(models.Task, 'tid'), raise_exception=True)
 def exit_tracking_process(request, tid):
-    currentTask = entireVideoTracking[request.user.username][tid]
+    if entireVideoTracking:
+        tasks = [task for user in entireVideoTracking.values() 
+                    for task in user.keys() 
+                    if task == tid]
 
-    if os.path.exists(currentTask["video path"]):
-        os.remove(currentTask["video path"])
+        if len(tasks) == 1:
+            currentTask = entireVideoTracking[username][tid]
 
-    entireVideoTracking[request.user.username].pop(tid)
+            if os.path.exists(currentTask["video path"]):
+                os.remove(currentTask["video path"])
+
+        entireVideoTracking[username].pop(tid)
 
 @login_required
 @permission_required(perm=['engine.task.access'],
