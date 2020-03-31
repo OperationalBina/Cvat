@@ -487,7 +487,7 @@ function setupSettings() {
         let urlInputMath = /^[a-zA-Z0-9._-]+$/.test(urlValue);
         let accessInputMath = /^[a-zA-Z0-9]+$/.test(accessValue);
         let secretInputMath = /^[a-zA-Z0-9]+$/.test(secretValue);
-        let urlInputContain = /^[a-zA-Z0-9/_-]*\.[a-zA-Z0-9/_-]*\.[a-zA-Z0-9/_-]*$/.test(urlValue);
+        let urlInputContain = /^[a-zA-Z0-9/_-]*\.[a-zA-Z0-9/_.-]*$/.test(urlValue);
 
         if (!pathInputMath) {
             return 'Path don\'t pass validation only [a-zA-Z0-9/ _-] allowed';
@@ -524,41 +524,41 @@ function setupSettings() {
             'name': pathValue
         }
 
-        $.ajax({
-            url: `does_object_storage_exist/project/${projects[projectIndex].id}`,
-            type: 'POST',
-            contentType: "application/json",
-            data: JSON.stringify(oData),
-            success: function (objectStorageExists) {
-                if (objectStorageExists.result) {
-                    objectStorageMessage.css('color', 'red');
-                    objectStorageMessage.text('This project already has an object storage with this path. Please choose a different one.');
-                } else {
-                    objectStorageData = {
-                        'name': pathValue,
-                        'endpoint_url': urlValue,
-                        'access_key': accessValue,
-                        'secret_key': secretValue,
-                        'projectId': projects[projectIndex].id
-                    };
+            $.ajax({
+                url: `does_object_storage_exist/project/${projects[projectIndex].id}`,
+                type: 'POST',
+                contentType: "application/json",
+                data: JSON.stringify(oData),
+                success: function (objectStorageExists) {
+                    if (objectStorageExists.result) {
+                        objectStorageMessage.css('color', 'red');
+                        objectStorageMessage.text('This project already has an object storage with this path. Please choose a different one.');
+                    } else {
+                        objectStorageData = {
+                            'name': pathValue,
+                            'endpoint_url': urlValue,
+                            'access_key': accessValue,
+                            'secret_key': secretValue,
+                            'projectId': projects[projectIndex].id
+                        };
 
-                    newObjectStorageButton.prop('disabled', true);
+                        newObjectStorageButton.prop('disabled', true);
 
-                    createObjectStorageRequest(objectStorageData,
-                        () => {
-                            objectStorageMessage.css('color', 'green');
-                            objectStorageMessage.text('Successful request! Creating..');
-                        },
-                        () => window.location.reload(),
-                        (response) => {
-                            objectStorageMessage.css('color', 'red');
-                            objectStorageMessage.text(response);
-                        },
-                        () => newObjectStorageButton.prop('disabled', false));                          
+                        createObjectStorageRequest(objectStorageData,
+                            () => {
+                                objectStorageMessage.css('color', 'green');
+                                objectStorageMessage.text('Successful request! Creating..');
+                            },
+                            () => window.location.reload(),
+                            (response) => {
+                                objectStorageMessage.css('color', 'red');
+                                objectStorageMessage.text(response);
+                            },
+                            () => newObjectStorageButton.prop('disabled', false));                          
+                    }
+
                 }
-
-            }
-        });  
+            });  
         
     }
 
@@ -571,6 +571,111 @@ function setupSettings() {
             success: function(data) {
                 onSuccessRequest();
                 onSuccessCreate();
+            },
+            error: function(data) {
+                onComplete();
+                onError(data.responseText);
+            }
+        });
+    }
+
+    function validateObjectStorageInputsOnUpdate() {
+        let pathInputMath = /^[a-zA-Z0-9/ _-]+$/.test(pathValue);
+        let urlInputMath = /^[a-zA-Z0-9._-]+$/.test(urlValue);
+        let accessInputMath = /^[a-zA-Z0-9]+$/.test(accessValue);
+        let secretInputMath = /^[a-zA-Z0-9]+$/.test(secretValue);
+        let urlInputContain = /^[a-zA-Z0-9/_-]*\.[a-zA-Z0-9/_.-]*$/.test(urlValue);
+
+        if (!pathInputMath) {
+            return 'Path don\'t pass validation only [a-zA-Z0-9/ _-] allowed';
+        }
+
+        if (urlValue != '' && !urlInputMath) {
+            return 'Url don\'t pass validation only [a-zA-Z0-9._-] allowed';
+        }
+
+        if (accessValue != '' && !accessInputMath) {
+            return 'Access Key don\'t pass validation only [a-zA-Z0-9] allowed';
+        }
+
+        if (secretValue != '' && !secretInputMath) {
+            return 'Secret Key don\'t pass validation only [a-zA-Z0-9] allowed';
+        }
+
+        if (urlValue != '' && !urlInputContain) {
+            return 'Url don\'t pass validation, must contain \'.\'- example.dom.net';
+        }
+
+        return '';
+    }
+
+    function renameObjectStorage() {
+        let notValidMessage = validateObjectStorageInputsOnUpdate();
+        if (notValidMessage != '') {
+            objectStorageMessage.css('color', 'red');
+            objectStorageMessage.text(notValidMessage);
+            return;
+        } 
+
+        oData = {
+            'name': pathValue
+        }
+
+        $.ajax({
+            url: `does_object_storage_exist/project/${projects[projectIndex].id}`,
+            type: 'POST',
+            contentType: "application/json",
+            data: JSON.stringify(oData),
+            success: function (objectStorageExists) {
+                if (!objectStorageExists.result) {
+                    objectStorageMessage.css('color', 'red');
+                    objectStorageMessage.text('This project does not have object storage with this path. Please choose a different one.');
+                } else {
+                    objectStorageData = {};
+                    objectStorageData['name'] = pathValue;
+                    if (urlValue != '') {
+                        objectStorageData['endpoint_url'] = urlValue;
+                    }
+
+                    if (accessValue != '') {
+                        objectStorageData['access_key'] = accessValue;
+                    }
+
+                    if (secretValue != '') {
+                        objectStorageData['secret_key'] = secretValue;
+                    }
+
+                    objectStorageData['projectId'] = projects[projectIndex].id;
+                    
+
+                    renameObjectStorageButton.prop('disabled', true);
+
+                    updateObjectStorageRequest(objectStorageData,
+                        () => {
+                            objectStorageMessage.css('color', 'green');
+                            objectStorageMessage.text('Successful request! Updating..');
+                        },
+                        () => window.location.reload(),
+                        (response) => {
+                            objectStorageMessage.css('color', 'red');
+                            objectStorageMessage.text(response);
+                        },
+                        () => renameObjectStorageButton.prop('disabled', false));                          
+                }
+
+            }
+        });  
+    }
+
+    function updateObjectStorageRequest(oData, onSuccessRequest, onSuccessUpdate, onError, onComplete) {
+        $.ajax({
+            url: 'update_object_storage' ,
+            type: 'PUT',
+            contentType: "application/json",
+            data: JSON.stringify(oData),
+            success: function(data) {
+                onSuccessRequest();
+                onSuccessUpdate();
             },
             error: function(data) {
                 onComplete();

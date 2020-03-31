@@ -632,6 +632,40 @@ def addNewObjectStorage(request):
     return HttpResponse()
 
 @login_required
+def updateObjectStorage(request):
+    if not (request.user.has_perm('dashboard.views.isAdmin')):
+        return HttpResponseForbidden()
+
+    def updateObjectStorage(data):
+        try:     
+            all_os_names_per_projects = list(Projects_ObjectStorages.objects.filter(project__id=data['projectId']).values_list('object_storage__id', flat=True))
+            object_storage_to_update = ObjectStorages.objects.filter(id__in=all_os_names_per_projects ,name=data['name']).first()
+            object_storage_to_update.name = data['name']
+            if 'secret_key' in data:
+                object_storage_to_update.secret_key = data['secret_key']
+            if 'access_key' in data:
+                object_storage_to_update.access_key = data['access_key']
+            if 'endpoint_url' in data:
+                object_storage_to_update.endpoint_url = data['endpoint_url']
+
+            object_storage_to_update.save()
+
+        except Exception as e:
+            slogger.glob.error("cannot update this object storage {} for project #{}".format(data['name'], data['projectId']), exc_info=True)
+            return HttpResponseBadRequest(str(e))
+
+        return 'Updated'
+    
+    requestContent = json.loads(request.body.decode("utf-8"))
+
+    if (requestContent['name'] == ''):
+        return HttpResponseBadRequest("Can't updated an object storage without a path")
+    else:
+        updateObjectStorage(requestContent)
+
+    return HttpResponse()
+
+@login_required
 def saveFrameProperty(request):
     if not (request.user.has_perm('dashboard.views.isManager') or request.user.has_perm('dashboard.views.isAdmin')):
         return HttpResponseForbidden()
