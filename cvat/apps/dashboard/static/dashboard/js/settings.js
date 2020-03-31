@@ -684,6 +684,72 @@ function setupSettings() {
         });
     }
 
+    function deleteObjectStorage() {
+        let notValidMessage = ''
+        if (pathValue == '') {
+            notValidMessage = 'Path don\'t pass validation, can not be empty';
+        }
+
+        if (notValidMessage != '') {
+            objectStorageMessage.css('color', 'red');
+            objectStorageMessage.text(notValidMessage);
+            return;
+        } 
+
+        oData = {
+            'name': pathValue
+        }
+
+        $.ajax({
+            url: `does_object_storage_exist/project/${projects[projectIndex].id}`,
+            type: 'POST',
+            contentType: "application/json",
+            data: JSON.stringify(oData),
+            success: function (objectStorageExists) {
+                if (!objectStorageExists.result) {
+                    objectStorageMessage.css('color', 'red');
+                    objectStorageMessage.text('This project does not have object storage with this path. Please choose a different one.');
+                } else {
+                    objectStorageData = {};
+                    objectStorageData['name'] = pathValue;
+                    objectStorageData['projectId'] = projects[projectIndex].id;
+
+                    removeObjectStorageButton.prop('disabled', true);
+
+                    deleteObjectStorageRequest(objectStorageData,
+                        () => {
+                            objectStorageMessage.css('color', 'green');
+                            objectStorageMessage.text('Successful request! Deleting..');
+                        },
+                        () => window.location.reload(),
+                        (response) => {
+                            objectStorageMessage.css('color', 'red');
+                            objectStorageMessage.text(response);
+                        },
+                        () => removeObjectStorageButton.prop('disabled', false));                          
+                }
+
+            }
+        });  
+    }
+
+    function deleteObjectStorageRequest(oData, onSuccessRequest, onSuccessDelete, onError, onComplete) {
+        $.ajax({
+            url: 'delete_object_storage' ,
+            type: 'DELETE',
+            contentType: "application/json",
+            data: JSON.stringify(oData),
+            success: function(data) {
+                onSuccessRequest();
+                onSuccessDelete();
+            },
+            error: function(data) {
+                onComplete();
+                onError(data.responseText);
+            }
+        });
+    }
+
     $(window).on('keydown', (event) => {
         let currentBrowseTree = $($("#labelAddModalForm > div:visible > div > div")[0]);
         if (currentBrowseTree.length > 0) {
