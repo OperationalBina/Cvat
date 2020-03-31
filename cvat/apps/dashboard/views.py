@@ -595,6 +595,43 @@ def addNewProject(request):
     return HttpResponse()
 
 @login_required
+def addNewObjectStorage(request):
+    if not (request.user.has_perm('dashboard.views.isAdmin')):
+        return HttpResponseForbidden()
+
+    def createNewObjectStorage(data):
+        try:     
+            latestPK = ObjectStorages.objects.latest('pk').pk
+        except:
+            latestPK = 0
+        
+        return ObjectStorages.objects.create(pk=(latestPK + 1), 
+                                             name=data['name'], 
+                                             access_key=data['access_key'],
+                                             secret_key=data['secret_key'],
+                                             endpoint_url=data['endpoint_url'])
+    
+    def connectObjectStorageToProject(os_id, p_id):
+        try:     
+            latestPK = Projects_ObjectStorages.objects.latest('pk').pk
+        except:
+            latestPK = 0
+        
+        return Projects_ObjectStorages.objects.create(pk=(latestPK + 1), 
+                                                      object_storage_id=os_id, 
+                                                      project_id=p_id)
+    
+    requestContent = json.loads(request.body.decode("utf-8"))
+
+    if (requestContent['name'] == ''):
+        return HttpResponseBadRequest("Can't create an object storage without a path")
+    else:
+        object_storage = createNewObjectStorage(requestContent)
+        connectObjectStorageToProject(object_storage.id, requestContent['projectId'])
+
+    return HttpResponse()
+
+@login_required
 def saveFrameProperty(request):
     if not (request.user.has_perm('dashboard.views.isManager') or request.user.has_perm('dashboard.views.isAdmin')):
         return HttpResponseForbidden()
@@ -645,4 +682,10 @@ def get_matomo(request):
 @login_required
 def doesTaskExist(request, projectId, taskName):
     response = {"result": doesTaskNameExist(projectId, taskName)}
+    return JsonResponse(response)
+
+@login_required
+def doesObjectStorageExist(request, projectId):
+    requestContent = json.loads(request.body.decode("utf-8"))
+    response = {"result": doesObjectStorageExistInProject(projectId, requestContent['name'])}
     return JsonResponse(response)

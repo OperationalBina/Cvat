@@ -39,11 +39,12 @@ def tagify(tag_suffix, path, objs=False):  # Turn video name into tag file name
     return final	
 
 def connect_to_object_storage(user_id, project_id, os_id, isAdmin):
-    secret_key_access_key = getObjectStorageSecretAndAccessKey(user_id, project_id, os_id, isAdmin)
-    secret_key = secret_key_access_key[0]
-    access_key = secret_key_access_key[1]
+    details = getObjectStorageSecretAndAccessKey(user_id, project_id, os_id, isAdmin)
+    secret_key = details[0]
+    access_key = details[1]
+    endpoint_url = details[2]
 
-    objs = ObjectStorageWrapper(access_key=access_key, secret_key=secret_key, endpt_url=os.environ.get('ENDPT_URL_OS'))
+    objs = ObjectStorageWrapper(access_key=access_key, secret_key=secret_key, endpt_url=endpoint_url)
 
     return objs 
 
@@ -51,7 +52,7 @@ def getObjectStorageSecretAndAccessKey(user_id, project_id, os_id, isAdmin):
     # if the user authorize to connect this project
     if (Projects_Users.objects.filter(user_id=user_id).filter(project_id=project_id).exists() or isAdmin) and \
         Projects_ObjectStorages.objects.filter(project_id=project_id, object_storage_id=os_id).exists():
-        return list(ObjectStorages.objects.filter(id=os_id).values_list('secret_key', 'access_key'))[0]
+        return list(ObjectStorages.objects.filter(id=os_id).values_list('secret_key', 'access_key', 'endpoint_url'))[0]
     else: 
         return []
 

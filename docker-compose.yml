@@ -37,6 +37,27 @@ services:
           - cvat-redis
     restart: always
 
+  pgbackups:
+    image: prodrigestivill/postgres-backup-local
+    restart: always
+    volumes:
+        - cvat-backup-db:/backups
+    links:
+        - cvat-db
+    depends_on:
+        - cvat-db
+    environment:
+        - POSTGRES_HOST=cvat-db
+        - POSTGRES_DB=cvat
+        - POSTGRES_USER=root
+        - POSTGRES_PASSWORD=postgres
+        - POSTGRES_EXTRA_OPTS=-Z9 --schema=public --blobs
+        - SCHEDULE=@daily
+        - BACKUP_KEEP_DAYS=7
+        - BACKUP_KEEP_WEEKS=4
+        - BACKUP_KEEP_MONTHS=6
+        - HEALTHCHECK_PORT=80
+
   cvat:
     container_name: cvat
     image: cvat
@@ -83,3 +104,4 @@ volumes:
   cvat-data:
   cvat-keys:
   cvat-logs:
+  cvat-backup-db:

@@ -14,7 +14,7 @@ generator_id_sorted = 0
 def getObjectStoragesPerProject(user_id, project_id, isAdmin):
     # if the user authorize to connect this project
     if Projects_Users.objects.filter(user_id=user_id).filter(project_id=project_id).exists() or isAdmin:
-        return list(Projects_ObjectStorages.objects.filter(project_id=project_id).values_list('object_storage__name', 'channels', 'object_storage__secret_key', 'object_storage__access_key', 'object_storage__id', 'object_storage__name'))
+        return list(Projects_ObjectStorages.objects.filter(project_id=project_id).values_list('object_storage__name', 'channels', 'object_storage__secret_key', 'object_storage__access_key', 'object_storage__id', 'object_storage__endpoint_url'))
     else: 
         return []
 
@@ -25,27 +25,28 @@ def handleObjectStorages(request):
     final_items = []
 
     # for each object storage add to the item list all files 
-    for os in list_of_os:
+    for os_details in list_of_os:
         items = []
-        secret_key = os[2]
-        access_key = os[3]
-        objs = ObjectStorageWrapper(access_key=access_key, secret_key=secret_key, endpt_url=os.environ.get('ENDPT_URL_OS'))
+        secret_key = os_details[2]
+        access_key = os_details[3]
+        endpoint_url = os_details[5]
+        objs = ObjectStorageWrapper(access_key=access_key, secret_key=secret_key, endpt_url=endpoint_url)
 
         # if there is a channel in this object storage
-        if os[1] == None:
-            path = os[0]
+        if os_details[1] == None:
+            path = os_details[0]
             items = objs.find_objects(path, formats=('.mp4', '.avi'))
         else:
 
             # for each channel get all 1500kbps files
-            for channel in os[1]:
-                path = os[0] + '/' + channel
+            for channel in os_details[1]:
+                path = os_details[0] + '/' + channel
                 items += objs.find_objects(path, formats=('1500kbps_init_gpac.mp4'))
 
         # for each file add the object storage id to know from where to connect
         for item in items:
-            item['OS_ID'] = os[4]
-            item['Bucket'] = os[0].split('/')[0]
+            item['OS_ID'] = os_details[4]
+            item['Bucket'] = os_details[0].split('/')[0]
             final_items.append(item)
 
     return final_items

@@ -7,6 +7,7 @@ function setupSettings() {
     let labelsSettingstab = $('#labelsSettingstab');
     let framePropertiesSettingstab = $('#framePropertiesSettingstab');
     let projectsSettingstab = $('#projectsSettingstab');
+    let objectStorageSettingstab = $('#objectStorageSettingstab');
 
     let colorDiv = $('#colorDiv');
     let settingsColorpicker = $('#label_colorpicker');
@@ -27,13 +28,33 @@ function setupSettings() {
     let newProjectButton = $('#newProjectButton');
     let renameProjectButton = $('#renameProjectButton');
     let removeProjectButton = $('#removeProjectButton');
-
+    
     let isProjectScored = $("#isProjectScored");
+
+    let newObjectStorageButton = $('#newObjectStorageButton');
+    let renameObjectStorageButton = $('#renameObjectStorageButton');
+    let removeObjectStorageButton = $('#removeObjectStorageButton');
     
     let prevProject = $('#dashboardProjectSelectorPrev');
     let nextProject = $('#dashboardProjectSelectorNext');
 
+    let pathInput = $('#objectStoragePathInput');
+    let urlInput = $('#objectStorageUrlInput');
+    let accessInput = $('#objectStorageAccessInput');
+    let secretInput = $('#objectStorageSecretInput');
+
+    let pathValue = pathInput.prop('value');
+    let urlValue = urlInput.prop('value');
+    let accessValue = accessInput.prop('value');
+    let secretValue = secretInput.prop('value');
+    let objectStorageMessage = $('#objectStorageMessage')
+
     let labelsColors = {};
+
+    pathInput.on('change', (e) => {pathValue = e.target.value;});
+    urlInput.on('change', (e) => {urlValue = e.target.value;});
+    accessInput.on('change', (e) => {accessValue = e.target.value;});
+    secretInput.on('change', (e) => {secretValue = e.target.value;});
 
     document.getElementById("open_tasks_button").click();
     document.getElementById("attributes_button").click();
@@ -43,6 +64,7 @@ function setupSettings() {
         error: function () {
             $(".isAdmin").remove();
             $("#projectsSettingstab").remove();
+            $("#objectStorageSettingstab").remove();
         }
     });
 
@@ -92,6 +114,10 @@ function setupSettings() {
     newProjectButton.on('click', () => createNode(EditProjectsBrowseTree));
     renameProjectButton.on('click', () => renameNode(EditProjectsBrowseTree));
     removeProjectButton.on('click', () => deleteNode(EditProjectsBrowseTree));
+
+    newObjectStorageButton.on('click', () => createObjectStorage());
+    renameObjectStorageButton.on('click', () => renameObjectStorage());
+    removeObjectStorageButton.on('click', () => deleteObjectStorage());
 
 
     EditLabelsBrowseTree.on("loaded.jstree refresh.jstree", function () {
@@ -456,6 +482,103 @@ function setupSettings() {
         dashboardLabelAddModal.removeClass('hidden');
     });
 
+    function validateObjectStorageInputs() {
+        let pathInputMath = /^[a-zA-Z0-9/ _-]+$/.test(pathValue);
+        let urlInputMath = /^[a-zA-Z0-9._-]+$/.test(urlValue);
+        let accessInputMath = /^[a-zA-Z0-9]+$/.test(accessValue);
+        let secretInputMath = /^[a-zA-Z0-9]+$/.test(secretValue);
+        let urlInputContain = /^[a-zA-Z0-9/_-]*\.[a-zA-Z0-9/_-]*\.[a-zA-Z0-9/_-]*$/.test(urlValue);
+
+        if (!pathInputMath) {
+            return 'Path don\'t pass validation only [a-zA-Z0-9/ _-] allowed';
+        }
+
+        if (!urlInputMath) {
+            return 'Url don\'t pass validation only [a-zA-Z0-9._-] allowed';
+        }
+
+        if (!accessInputMath) {
+            return 'Access Key don\'t pass validation only [a-zA-Z0-9] allowed';
+        }
+
+        if (!secretInputMath) {
+            return 'Secret Key don\'t pass validation only [a-zA-Z0-9] allowed';
+        }
+
+        if (!urlInputContain) {
+            return 'Url don\'t pass validation, must contain \'.\'- example.dom.net';
+        }
+
+        return '';
+    }
+
+    function createObjectStorage() {
+        let notValidMessage = validateObjectStorageInputs();
+        if (notValidMessage != '') {
+            objectStorageMessage.css('color', 'red');
+            objectStorageMessage.text(notValidMessage);
+            return;
+        } 
+
+        oData = {
+            'name': pathValue
+        }
+
+        $.ajax({
+            url: `does_object_storage_exist/project/${projects[projectIndex].id}`,
+            type: 'POST',
+            contentType: "application/json",
+            data: JSON.stringify(oData),
+            success: function (objectStorageExists) {
+                if (objectStorageExists.result) {
+                    objectStorageMessage.css('color', 'red');
+                    objectStorageMessage.text('This project already has an object storage with this path. Please choose a different one.');
+                } else {
+                    objectStorageData = {
+                        'name': pathValue,
+                        'endpoint_url': urlValue,
+                        'access_key': accessValue,
+                        'secret_key': secretValue,
+                        'projectId': projects[projectIndex].id
+                    };
+
+                    newObjectStorageButton.prop('disabled', true);
+
+                    createObjectStorageRequest(objectStorageData,
+                        () => {
+                            objectStorageMessage.css('color', 'green');
+                            objectStorageMessage.text('Successful request! Creating..');
+                        },
+                        () => window.location.reload(),
+                        (response) => {
+                            objectStorageMessage.css('color', 'red');
+                            objectStorageMessage.text(response);
+                        },
+                        () => newObjectStorageButton.prop('disabled', false));                          
+                }
+
+            }
+        });  
+        
+    }
+
+    function createObjectStorageRequest(oData, onSuccessRequest, onSuccessCreate, onError, onComplete) {
+        $.ajax({
+            url: 'create_object_storage' ,
+            type: 'POST',
+            contentType: "application/json",
+            data: JSON.stringify(oData),
+            success: function(data) {
+                onSuccessRequest();
+                onSuccessCreate();
+            },
+            error: function(data) {
+                onComplete();
+                onError(data.responseText);
+            }
+        });
+    }
+
     $(window).on('keydown', (event) => {
         let currentBrowseTree = $($("#labelAddModalForm > div:visible > div > div")[0]);
         if (currentBrowseTree.length > 0) {
@@ -539,6 +662,10 @@ function setupSettings() {
 
     projectsSettingstab.on('click', function (e) {
         switchSetting(e, 'projects_config');
+    });
+
+    objectStorageSettingstab.on('click', function (e) {
+        switchSetting(e, 'object_storage_config');
     });
 
     document.getElementById("labelsSettingstab").click();

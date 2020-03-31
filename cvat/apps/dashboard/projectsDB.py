@@ -1,4 +1,4 @@
-from ..engine.models import Projects_Users, Task, Projects, Projects_ObjectStorages
+from ..engine.models import Projects_Users, Task, Projects, Projects_ObjectStorages, ObjectStorages
 from django.contrib.auth.models import User
 from django.db.models import Q
 from cvat.apps.engine.log import slogger
@@ -90,3 +90,7 @@ def getProjectHasObjectStorage(projectId):
 
 def doesTaskNameExist(projectId, taskName):
     return Task.objects.filter(project__id=projectId, name=taskName).exists()
+
+def doesObjectStorageExistInProject(projectId, objectStoragePath):
+    object_storage_id = list(ObjectStorages.objects.filter(name=objectStoragePath).values_list('id', flat=True))
+    return Projects_ObjectStorages.objects.filter(project__id=projectId, object_storage__id__in=object_storage_id).exists()
