@@ -595,6 +595,104 @@ def addNewProject(request):
     return HttpResponse()
 
 @login_required
+def addNewObjectStorage(request):
+    if not (request.user.has_perm('dashboard.views.isAdmin')):
+        return HttpResponseForbidden()
+
+    def createNewObjectStorage(data):
+        try:     
+            latestPK = ObjectStorages.objects.latest('pk').pk
+        except:
+            latestPK = 0
+        
+        return ObjectStorages.objects.create(pk=(latestPK + 1), 
+                                             name=data['name'], 
+                                             access_key=data['access_key'],
+                                             secret_key=data['secret_key'],
+                                             endpoint_url=data['endpoint_url'])
+    
+    def connectObjectStorageToProject(os_id, p_id):
+        try:     
+            latestPK = Projects_ObjectStorages.objects.latest('pk').pk
+        except:
+            latestPK = 0
+        
+        return Projects_ObjectStorages.objects.create(pk=(latestPK + 1), 
+                                                      object_storage_id=os_id, 
+                                                      project_id=p_id)
+    
+    requestContent = json.loads(request.body.decode("utf-8"))
+
+    if (requestContent['name'] == ''):
+        return HttpResponseBadRequest("Can't create an object storage without a path")
+    else:
+        object_storage = createNewObjectStorage(requestContent)
+        connectObjectStorageToProject(object_storage.id, requestContent['projectId'])
+
+    return HttpResponse()
+
+@login_required
+def updateObjectStorage(request):
+    if not (request.user.has_perm('dashboard.views.isAdmin')):
+        return HttpResponseForbidden()
+
+    def updateObjectStorageFunc(data):
+        try:     
+            all_os_names_per_projects = list(Projects_ObjectStorages.objects.filter(project__id=data['projectId']).values_list('object_storage__id', flat=True))
+            object_storage_to_update = ObjectStorages.objects.filter(id__in=all_os_names_per_projects ,name=data['name']).first()
+            object_storage_to_update.name = data['name']
+            if 'secret_key' in data:
+                object_storage_to_update.secret_key = data['secret_key']
+            if 'access_key' in data:
+                object_storage_to_update.access_key = data['access_key']
+            if 'endpoint_url' in data:
+                object_storage_to_update.endpoint_url = data['endpoint_url']
+
+            object_storage_to_update.save()
+
+        except Exception as e:
+            slogger.glob.error("cannot update this object storage {} for project #{}".format(data['name'], data['projectId']), exc_info=True)
+            return HttpResponseBadRequest(str(e))
+
+        return 'Updated'
+    
+    requestContent = json.loads(request.body.decode("utf-8"))
+
+    if (requestContent['name'] == ''):
+        return HttpResponseBadRequest("Can't updated an object storage without a path")
+    else:
+        updateObjectStorageFunc(requestContent)
+
+    return HttpResponse()
+
+@login_required
+def deleteObjectStorage(request):
+    if not (request.user.has_perm('dashboard.views.isAdmin')):
+        return HttpResponseForbidden()
+
+    def deleteObjectStorageFunc(data):
+        try:     
+            all_os_names_per_projects = list(Projects_ObjectStorages.objects.filter(project__id=data['projectId']).values_list('object_storage__id', flat=True))
+            object_storage_to_delete = ObjectStorages.objects.filter(id__in=all_os_names_per_projects ,name=data['name']).first()
+
+            object_storage_to_delete.delete()
+
+        except Exception as e:
+            slogger.glob.error("cannot delete this object storage {} for project #{}".format(data['name'], data['projectId']), exc_info=True)
+            return HttpResponseBadRequest(str(e))
+
+        return 'Deleted'
+    
+    requestContent = json.loads(request.body.decode("utf-8"))
+
+    if (requestContent['name'] == ''):
+        return HttpResponseBadRequest("Can't deleted an object storage without a path")
+    else:
+        deleteObjectStorageFunc(requestContent)
+
+    return HttpResponse()
+
+@login_required
 def saveFrameProperty(request):
     if not (request.user.has_perm('dashboard.views.isManager') or request.user.has_perm('dashboard.views.isAdmin')):
         return HttpResponseForbidden()
@@ -645,4 +743,10 @@ def get_matomo(request):
 @login_required
 def doesTaskExist(request, projectId, taskName):
     response = {"result": doesTaskNameExist(projectId, taskName)}
+    return JsonResponse(response)
+
+@login_required
+def doesObjectStorageExist(request, projectId):
+    requestContent = json.loads(request.body.decode("utf-8"))
+    response = {"result": doesObjectStorageExistInProject(projectId, requestContent['name'])}
     return JsonResponse(response)
