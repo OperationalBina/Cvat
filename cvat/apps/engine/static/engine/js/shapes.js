@@ -1869,7 +1869,6 @@ class ShapeView extends Listener {
         }
     }
 
-
     _setupLockedUI(locked) {
         if (this._uis.changelabel) {
             this._uis.changelabel.disabled = locked;
@@ -2021,7 +2020,7 @@ class ShapeView extends Listener {
                 hiddenButton.setAttribute('title', `
                     ${shortkeys['switch_hide_mode'].view_value} - ${shortkeys['switch_hide_mode'].description}` + `\n` +
                     `${shortkeys['switch_all_hide_mode'].view_value} - ${shortkeys['switch_all_hide_mode'].description}`);
-
+                
                 annotationCenter.appendChild(lockButton);
                 annotationCenter.appendChild(occludedButton);
                 annotationCenter.appendChild(copyButton);

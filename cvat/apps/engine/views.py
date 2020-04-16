@@ -17,7 +17,7 @@ import re
 from threading import Thread
 
 from django.views.decorators.cache import never_cache
-from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse, HttpResponseRedirect, FileResponse
+from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse, HttpResponseRedirect, FileResponse, HttpResponseForbidden
 from django.shortcuts import redirect, render
 from django.conf import settings
 from rules.contrib.views import permission_required, objectgetter
@@ -98,7 +98,7 @@ def create_task(request):
             target_paths.append(upload_dir)
         else:
             data_list = request.FILES.getlist('data')
-
+            slogger.glob.info("files = {}".format(request.FILES))
             if len(data_list) > settings.LOCAL_LOAD_MAX_FILES_COUNT:
                 raise Exception('Too many files. Please use download via share')
             common_size = 0
@@ -253,7 +253,7 @@ def get_frame(request, tid, frame):
                 if str(frame) in downloadFrames[currentUser][tid]:
                     downloadFrames[currentUser][tid][str(frame)].join()
                 else:
-                    s3_cli.download_file(settings.AWS_STORAGE_BUCKET_NAME, frame_path, frame_path)
+                    downloadFile(settings.AWS_STORAGE_BUCKET_NAME, frame_path, frame_path)
 
             del downloadFrames[currentUser][tid][str(frame)]
             img = open(frame_path, 'rb')
@@ -293,11 +293,11 @@ def downloadThread(frames, tid, currentUser):
             except OSError as e:
                 if e.errno == errno.EEXIST:
                     if not os.path.isdir(dir_path):
-                    try:
-                        os.remove(dir_path)
-                        os.mkdir(dir_path)
-                    except IsADirectoryError as e:
-                        pass
+                        try:
+                            os.remove(dir_path)
+                            os.mkdir(dir_path)
+                        except IsADirectoryError as e:
+                            pass
         
         if is_downloaded:
             os.rename(frame_path, destination_path)
@@ -800,12 +800,12 @@ def exit_tracking_process(request, tid):
                     if task == tid]
 
         if len(tasks) == 1:
-            currentTask = entireVideoTracking[username][tid]
+            currentTask = entireVideoTracking[request.user.username][tid]
 
             if os.path.exists(currentTask["video path"]):
                 os.remove(currentTask["video path"])
 
-        entireVideoTracking[username].pop(tid)
+        entireVideoTracking[request.user.username].pop(tid)
 
 @login_required
 @permission_required(perm=['engine.task.access'],
@@ -901,7 +901,7 @@ def updateTaskStatus(request, newStatus, taskId):
         db_job.status = newStatus
         db_job.save()
     except Exception as e:
-        slogger.glob.error("cannot update the target frame for task #{}".format(tid), exc_info=True)
+        slogger.glob.error("cannot update the target frame for task #{}".format(taskId), exc_info=True)
         return HttpResponseBadRequest(str(e))
 
     return HttpResponse()

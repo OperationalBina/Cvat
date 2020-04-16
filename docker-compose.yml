@@ -57,7 +57,6 @@ services:
         - BACKUP_KEEP_WEEKS=4
         - BACKUP_KEEP_MONTHS=6
         - HEALTHCHECK_PORT=80
-
   cvat:
     container_name: cvat
     image: cvat
@@ -92,7 +91,7 @@ services:
         API_SECRET: verysecretapi
         CVAT_API_TOKEN: CVAT_API
         SECURE_SITE: 'False'
-        API_SECURE_SITE: 'True'
+        API_SECURE_SITE: 'False'
         WITH_OS: 'False'
     volumes:
       - cvat-data:/home/django/data

@@ -142,7 +142,7 @@ class ObjectStorages(models.Model):
     name = models.CharField(max_length=256)
     secret_key = models.CharField(max_length=256)
     access_key = models.CharField(max_length=256)
-    endpoint_url = models.CharField(max_length=256)
+    endpoint_url = models.CharField(max_length=256, default='example.com')
     
     class Meta:
         default_permissions = ()

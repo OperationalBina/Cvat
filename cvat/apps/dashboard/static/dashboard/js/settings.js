@@ -524,42 +524,41 @@ function setupSettings() {
             'name': pathValue
         }
 
-            $.ajax({
-                url: `does_object_storage_exist/project/${projects[projectIndex].id}`,
-                type: 'POST',
-                contentType: "application/json",
-                data: JSON.stringify(oData),
-                success: function (objectStorageExists) {
-                    if (objectStorageExists.result) {
-                        objectStorageMessage.css('color', 'red');
-                        objectStorageMessage.text('This project already has an object storage with this path. Please choose a different one.');
-                    } else {
-                        objectStorageData = {
-                            'name': pathValue,
-                            'endpoint_url': urlValue,
-                            'access_key': accessValue,
-                            'secret_key': secretValue,
-                            'projectId': projects[projectIndex].id
-                        };
+        $.ajax({
+            url: `does_object_storage_exist/project/${projects[projectIndex].id}`,
+            type: 'POST',
+            contentType: "application/json",
+            data: JSON.stringify(oData),
+            success: function (objectStorageExists) {
+                if (objectStorageExists.result) {
+                    objectStorageMessage.css('color', 'red');
+                    objectStorageMessage.text('This project already has an object storage with this path. Please choose a different one.');
+                } else {
+                    objectStorageData = {
+                        'name': pathValue,
+                        'endpoint_url': urlValue,
+                        'access_key': accessValue,
+                        'secret_key': secretValue,
+                        'projectId': projects[projectIndex].id
+                    };
 
-                        newObjectStorageButton.prop('disabled', true);
+                    newObjectStorageButton.prop('disabled', true);
 
-                        createObjectStorageRequest(objectStorageData,
-                            () => {
-                                objectStorageMessage.css('color', 'green');
-                                objectStorageMessage.text('Successful request! Creating..');
-                            },
-                            () => window.location.reload(),
-                            (response) => {
-                                objectStorageMessage.css('color', 'red');
-                                objectStorageMessage.text(response);
-                            },
-                            () => newObjectStorageButton.prop('disabled', false));                          
-                    }
-
+                    createObjectStorageRequest(objectStorageData,
+                        () => {
+                            objectStorageMessage.css('color', 'green');
+                            objectStorageMessage.text('Successful request! Creating..');
+                        },
+                        () => window.location.reload(),
+                        (response) => {
+                            objectStorageMessage.css('color', 'red');
+                            objectStorageMessage.text(response);
+                        },
+                        () => newObjectStorageButton.prop('disabled', false));                            
                 }
-            });  
-        
+
+            }
+        });  
     }
 
     function createObjectStorageRequest(oData, onSuccessRequest, onSuccessCreate, onError, onComplete) {
