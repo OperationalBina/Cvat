@@ -21,6 +21,8 @@ from django.db import transaction
 from django.db.models import Q
 import json
 from .projectsDB import *
+import boto3
+import urllib3
 
 from cvat.apps.engine.log import slogger
 import os
@@ -624,12 +626,12 @@ def addNewObjectStorage(request):
     requestContent = json.loads(request.body.decode("utf-8"))
 
     if (requestContent['name'] == ''):
-        return HttpResponseBadRequest("Can't create an object storage without a path")
+        response = HttpResponseBadRequest("Can't create an object storage without a path")
     else:
         object_storage = createNewObjectStorage(requestContent)
-        connectObjectStorageToProject(object_storage.id, requestContent['projectId'])
+        response = HttpResponse(connectObjectStorageToProject(object_storage.id, requestContent['projectId']))
 
-    return HttpResponse()
+    return response
 
 @login_required
 def updateObjectStorage(request):
@@ -654,16 +656,16 @@ def updateObjectStorage(request):
             slogger.glob.error("cannot update this object storage {} for project #{}".format(data['name'], data['projectId']), exc_info=True)
             return HttpResponseBadRequest(str(e))
 
-        return 'Updated'
+        return HttpResponse('Updated')
     
     requestContent = json.loads(request.body.decode("utf-8"))
 
     if (requestContent['name'] == ''):
-        return HttpResponseBadRequest("Can't updated an object storage without a path")
+        response = HttpResponseBadRequest("Can't updated an object storage without a path")
     else:
-        updateObjectStorageFunc(requestContent)
+        response = updateObjectStorageFunc(requestContent)
 
-    return HttpResponse()
+    return response
 
 @login_required
 def deleteObjectStorage(request):
@@ -681,16 +683,55 @@ def deleteObjectStorage(request):
             slogger.glob.error("cannot delete this object storage {} for project #{}".format(data['name'], data['projectId']), exc_info=True)
             return HttpResponseBadRequest(str(e))
 
-        return 'Deleted'
+        return HttpResponse('Deleted')
     
     requestContent = json.loads(request.body.decode("utf-8"))
 
     if (requestContent['name'] == ''):
-        return HttpResponseBadRequest("Can't deleted an object storage without a path")
+        response = HttpResponseBadRequest("Can't deleted an object storage without a path")
     else:
-        deleteObjectStorageFunc(requestContent)
+        response = deleteObjectStorageFunc(requestContent)
 
-    return HttpResponse()
+    return response
+
+@login_required
+def testObjectStorage(request):
+    if not (request.user.has_perm('dashboard.views.isAdmin')):
+        return HttpResponseForbidden()
+
+    def testObjectStorageFunc(data):
+        try:     
+            s3_res = boto3.resource('s3', 
+                                    endpoint_url=data['endpoint_url'],
+                                    config=boto3.session.Config(signature_version='s3v4'),
+                                    aws_access_key_id=data['access_key'],
+                                    aws_secret_access_key=data['secret_key'],
+                                    verify=False)	
+            s3_cli = s3_res.meta.client
+
+            urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+            ##################### Check if bucket exists #####################
+            response = s3_cli.list_buckets()
+            buckets = [bucket['Name'] for bucket in response['Buckets']]
+
+            if not buckets or data['name'].split('/')[0] not in buckets:
+                return HttpResponseBadRequest("Can't find this path in this connection")
+            ##################################################################	
+        except Exception as e:
+            slogger.glob.error("Can't connect this object storage {} for project #{}".format(data['name'], data['projectId']), exc_info=True)
+            return HttpResponseBadRequest(str(e))
+
+        return HttpResponse('Connected')
+    
+    requestContent = json.loads(request.body.decode("utf-8"))
+
+    if (requestContent['name'] == ''):
+        response = HttpResponseBadRequest("Can't check an object storage without a path")
+    else:
+        response = testObjectStorageFunc(requestContent)
+
+    return response
 
 @login_required
 def saveFrameProperty(request):
