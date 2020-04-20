@@ -598,7 +598,7 @@ def addNewProject(request):
 
 @login_required
 def addNewObjectStorage(request):
-    if not (request.user.has_perm('dashboard.views.isAdmin')):
+    if not (request.user.has_perm('dashboard.views.isAdmin') or request.user.has_perm('dashboard.views.isManager')):
         return HttpResponseForbidden()
 
     def createNewObjectStorage(data):
@@ -635,7 +635,7 @@ def addNewObjectStorage(request):
 
 @login_required
 def updateObjectStorage(request):
-    if not (request.user.has_perm('dashboard.views.isAdmin')):
+    if not (request.user.has_perm('dashboard.views.isAdmin') or request.user.has_perm('dashboard.views.isManager')):
         return HttpResponseForbidden()
 
     def updateObjectStorageFunc(data):
@@ -669,7 +669,7 @@ def updateObjectStorage(request):
 
 @login_required
 def deleteObjectStorage(request):
-    if not (request.user.has_perm('dashboard.views.isAdmin')):
+    if not (request.user.has_perm('dashboard.views.isAdmin') or request.user.has_perm('dashboard.views.isManager')):
         return HttpResponseForbidden()
 
     def deleteObjectStorageFunc(data):
@@ -696,7 +696,7 @@ def deleteObjectStorage(request):
 
 @login_required
 def testObjectStorage(request):
-    if not (request.user.has_perm('dashboard.views.isAdmin')):
+    if not (request.user.has_perm('dashboard.views.isAdmin') or request.user.has_perm('dashboard.views.isManager')):
         return HttpResponseForbidden()
 
     def testObjectStorageFunc(data):
