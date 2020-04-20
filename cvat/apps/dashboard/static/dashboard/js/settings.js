@@ -34,6 +34,7 @@ function setupSettings() {
     let newObjectStorageButton = $('#newObjectStorageButton');
     let renameObjectStorageButton = $('#renameObjectStorageButton');
     let removeObjectStorageButton = $('#removeObjectStorageButton');
+    let testObjectStorageButton = $('#testObjectStorageButton');
     
     let prevProject = $('#dashboardProjectSelectorPrev');
     let nextProject = $('#dashboardProjectSelectorNext');
@@ -118,6 +119,7 @@ function setupSettings() {
     newObjectStorageButton.on('click', () => createObjectStorage());
     renameObjectStorageButton.on('click', () => renameObjectStorage());
     removeObjectStorageButton.on('click', () => deleteObjectStorage());
+    testObjectStorageButton.on('click', () => testObjectStorage());
 
 
     EditLabelsBrowseTree.on("loaded.jstree refresh.jstree", function () {
@@ -542,21 +544,32 @@ function setupSettings() {
                         'projectId': projects[projectIndex].id
                     };
 
-                    newObjectStorageButton.prop('disabled', true);
+                    $.ajax({
+                        url: 'test_object_storage' ,
+                        type: 'POST',
+                        contentType: "application/json",
+                        data: JSON.stringify(objectStorageData),
+                        success:  function (objectStorageConnected) {
+                            newObjectStorageButton.prop('disabled', true);
 
-                    createObjectStorageRequest(objectStorageData,
-                        () => {
-                            objectStorageMessage.css('color', 'green');
-                            objectStorageMessage.text('Successful request! Creating..');
-                        },
-                        () => window.location.reload(),
-                        (response) => {
+                            createObjectStorageRequest(objectStorageData,
+                                () => {
+                                    objectStorageMessage.css('color', 'green');
+                                    objectStorageMessage.text('Successful request! Creating..');
+                                },
+                                () => window.location.reload(),
+                                (response) => {
+                                    objectStorageMessage.css('color', 'red');
+                                    objectStorageMessage.text(response);
+                                },
+                                () => newObjectStorageButton.prop('disabled', false));     
+                        }, 
+                        error: function (response) {
                             objectStorageMessage.css('color', 'red');
-                            objectStorageMessage.text(response);
-                        },
-                        () => newObjectStorageButton.prop('disabled', false));                            
+                            objectStorageMessage.text(response.responseText);
+                        }                    
+                    });
                 }
-
             }
         });  
     }
@@ -741,6 +754,55 @@ function setupSettings() {
             success: function(data) {
                 onSuccessRequest();
                 onSuccessDelete();
+            },
+            error: function(data) {
+                onComplete();
+                onError(data.responseText);
+            }
+        });
+    }
+
+    function testObjectStorage() {
+        let notValidMessage = validateObjectStorageInputs();
+        if (notValidMessage != '') {
+            objectStorageMessage.css('color', 'red');
+            objectStorageMessage.text(notValidMessage);
+            return;
+        } 
+
+        objectStorageData = {
+            'name': pathValue,
+            'endpoint_url': urlValue,
+            'access_key': accessValue,
+            'secret_key': secretValue,
+            'projectId': projects[projectIndex].id
+        };
+
+        testObjectStorageButton.prop('disabled', true);
+
+        testObjectStorageRequest(objectStorageData,
+            () => {
+                objectStorageMessage.css('color', 'green');
+                objectStorageMessage.text('Successful connection!');
+            },
+            () => {},
+            (response) => {
+                objectStorageMessage.css('color', 'red');
+                objectStorageMessage.text(response);
+            },
+            () => testObjectStorageButton.prop('disabled', false));                              
+    }
+
+    function testObjectStorageRequest(oData, onSuccessRequest, onSuccessTest, onError, onComplete) {
+        $.ajax({
+            url: 'test_object_storage' ,
+            type: 'POST',
+            contentType: "application/json",
+            data: JSON.stringify(oData),
+            success: function(data) {
+                onSuccessRequest();
+                onSuccessTest();
+                onComplete();
             },
             error: function(data) {
                 onComplete();

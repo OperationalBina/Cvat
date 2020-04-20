@@ -19,6 +19,7 @@ urlpatterns = [
     path('create_object_storage', views.addNewObjectStorage),
     path('update_object_storage', views.updateObjectStorage),
     path('delete_object_storage', views.deleteObjectStorage),
+    path('test_object_storage', views.testObjectStorage),
     path('is_admin', views.isAdmin),
     path('is_manager', views.isManager),
     path('does_task_exist/project/<int:projectId>/task/<str:taskName>', views.doesTaskExist),
