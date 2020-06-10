@@ -1638,7 +1638,13 @@ class PlayerView {
         }
 
         if(isSegmentationMode && changedFrame) {
-            $('#loadSpecificFrameTags').val(frames.current);
+            if(frames.current == 0){
+                $('#loadSpecificFrameTags').val(frames.current);
+            }
+            else{
+                $('#loadSpecificFrameTags').val(frames.current - 1);
+            }
+            
             $('#loadTags').click();
         }
 
