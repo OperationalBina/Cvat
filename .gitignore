@@ -3,3 +3,4 @@ Dockerfile
 cvat/settings/production.py
 supervisord.conf
 .vscode/
+.idea/
