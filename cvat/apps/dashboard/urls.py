@@ -26,6 +26,7 @@ urlpatterns = [
     path('does_object_storage_exist/project/<int:projectId>', views.doesObjectStorageExist),
     path('has_object_storage/<int:projectId>', views.projectHasObjectStorage),
     path('get/projects', views.getProjectsFromDB),
+    path('get/project/<int:projectId>/tasks/<int:page>', views.get_task_batch),
     path('get/allUsers', views.getAllUsersFromDB),
     path('get/userForProject/<str:projectName>', views.getUsersForProjectFromDB),
     path('save_users_to_projects', views.saveUsersForProjectToDB),

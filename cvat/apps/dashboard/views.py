@@ -2,10 +2,11 @@
 #
 # SPDX-License-Identifier: MIT
 
-from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest, HttpResponseForbidden
+from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest, HttpResponseForbidden, HttpResponseNotFound
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.conf import settings
+from django.core.paginator import Paginator, EmptyPage
 from django.core import serializers
 from cvat.apps.authentication.decorators import login_required
 
@@ -791,3 +792,74 @@ def doesObjectStorageExist(request, projectId):
     requestContent = json.loads(request.body.decode("utf-8"))
     response = {"result": doesObjectStorageExistInProject(projectId, requestContent['name'])}
     return JsonResponse(response)
+
+
+# @login_required
+def get_task_batch(request, projectId, page):
+    if request.method != 'GET' or 'batchSize' not in request.GET:
+        return HttpResponseBadRequest("'batchSize' parameter wasn't supplied")
+    batch_size = int(request.GET['batchSize'])
+    query_name = request.GET['search'] if 'search' in request.GET else ''
+
+    try:
+        Projects.objects.get(pk=projectId)
+    except Exception:
+        return HttpResponseNotFound()
+
+    def parse_task_json(task):
+        res = {
+            'id': task.id,
+            'project': task.project.name,
+            'created_date': task.created_date,
+            'score': task.score,
+            'name': task.name,
+            'priority': task.priority,
+            'bug_tracker': task.bug_tracker,
+            'status': task.status,
+            'has_comments': task.has_comments,
+            'assignee': {
+                'id': task.assignee.id,
+                'name': task.assignee.username
+            },
+            'segment_set': [{'job_set': [{'id': job.id} for job in segm.job_set.all()]} for segm in
+                            task.segment_set.all()]
+        }
+        return res
+    if request.user.has_perm('dashboard.views.isAdmin'):
+        queryset = TaskModel.objects.filter(project__pk=projectId, name__icontains=query_name).prefetch_related('segment_set__job_set').order_by(
+        '-created_date').all()
+    else:
+        try:
+            _ = Projects_Users.objects.get(user__username=request.user, project__pk=projectId)
+        except:
+            return HttpResponseForbidden()
+
+        if request.user.has_perm('dashboard.views.isManager'):
+            queryset = TaskModel.objects.filter(project__pk=projectId, name__icontains=query_name).prefetch_related(
+                'segment_set__job_set').order_by(
+                '-created_date').all()
+        else:
+            queryset = TaskModel.objects.filter(project__pk=projectId, assignee__username=request.user, name__icontains=query_name).prefetch_related(
+                'segment_set__job_set').order_by(
+                '-created_date').all()
+
+
+    paginator = Paginator(queryset, batch_size, allow_empty_first_page=False)
+    try:
+        page_obj = paginator.page(page)
+    except EmptyPage:
+        return HttpResponseNotFound()
+
+    lst = list(page_obj.object_list)
+    comments_task_ids = list(
+        Comments.objects.filter(task__project__pk=projectId).values_list('task__id', flat=True))
+    res = []
+    for task in lst:
+        task.has_comments = task.id in comments_task_ids
+        if not task.project.has_score:
+            task.priority = convert_priority_to_string(task.score)
+        else:
+            task.priority = None
+        res.append(parse_task_json(task))
+
+    return JsonResponse(res, safe=False)
